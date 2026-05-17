@@ -448,137 +448,137 @@ export default function SpreadTable() {
             </div>
           )}
 
-          {/* Spread tab */}
-          {rightTab === "spread" && (<div className="flex-1 overflow-y-auto p-4 flex flex-col">
-            {hoveredEntry ? (
-              <div>
-                <div className="font-bold text-base mb-0.5" style={{ color: zoneFor(hoveredEntry.current_position).hex }}>
-                  {hoveredEntry.team}
-                </div>
-                <div className="text-[10px] text-gray-500 mb-3 uppercase tracking-wide">
-                  {hoveredEntry.locked ? "Position sealed" : `Spread: ${hoveredEntry.min_position}–${hoveredEntry.max_position}`}
-                </div>
+          {/* Spread tab — all three sections in one conditional */}
+          {rightTab === "spread" && (
+            <>
+              <div className="flex-1 overflow-y-auto p-4 flex flex-col">
+                {hoveredEntry ? (
+                  <div>
+                    <div className="font-bold text-base mb-0.5" style={{ color: zoneFor(hoveredEntry.current_position).hex }}>
+                      {hoveredEntry.team}
+                    </div>
+                    <div className="text-[10px] text-gray-500 mb-3 uppercase tracking-wide">
+                      {hoveredEntry.locked ? "Position sealed" : `Spread: ${hoveredEntry.min_position}–${hoveredEntry.max_position}`}
+                    </div>
 
-                {/* Histogram */}
-                {(() => {
-                  const dist = hoveredEntry.position_distribution;
-                  const maxP = Math.max(...Object.values(dist), 0.001);
-                  const sorted = Object.entries(dist).sort((a, b) => b[1] - a[1]);
-                  const mostLikely = sorted[0];
-                  return (
-                    <>
-                      <div className="flex gap-[2px] h-16 items-end mb-2">
-                        {Array.from({ length: TOTAL_POSITIONS }, (_, i) => {
-                          const pos = i + 1;
-                          const prob = dist[String(pos)] ?? 0;
-                          const h = prob === 0 ? 2 : 6 + (prob / maxP) * 94;
-                          const z = zoneFor(pos);
-                          return (
-                            <div
-                              key={pos}
-                              title={`Pos ${pos}: ${(prob * 100).toFixed(1)}%`}
-                              className="flex-1 rounded-t-sm transition-all duration-700"
-                              style={{
-                                height: `${h}%`,
-                                backgroundColor: z.hex,
-                                opacity: prob === 0 ? 0.08 : 0.3 + 0.7 * (prob / maxP),
-                              }}
-                            />
-                          );
-                        })}
+                    {/* Histogram */}
+                    {(() => {
+                      const dist = hoveredEntry.position_distribution;
+                      const maxP = Math.max(...Object.values(dist), 0.001);
+                      const sorted = Object.entries(dist).sort((a, b) => b[1] - a[1]);
+                      const mostLikely = sorted[0];
+                      return (
+                        <>
+                          <div className="flex gap-[2px] h-16 items-end mb-2">
+                            {Array.from({ length: TOTAL_POSITIONS }, (_, i) => {
+                              const pos = i + 1;
+                              const prob = dist[String(pos)] ?? 0;
+                              const h = prob === 0 ? 2 : 6 + (prob / maxP) * 94;
+                              const z = zoneFor(pos);
+                              return (
+                                <div
+                                  key={pos}
+                                  title={`Pos ${pos}: ${(prob * 100).toFixed(1)}%`}
+                                  className="flex-1 rounded-t-sm transition-all duration-700"
+                                  style={{
+                                    height: `${h}%`,
+                                    backgroundColor: z.hex,
+                                    opacity: prob === 0 ? 0.08 : 0.3 + 0.7 * (prob / maxP),
+                                  }}
+                                />
+                              );
+                            })}
+                          </div>
+                          {mostLikely && (
+                            <div className="text-xs mb-3">
+                              <span className="text-gray-400">Most likely: </span>
+                              <span className="font-bold" style={{ color: zoneFor(Number(mostLikely[0])).hex }}>
+                                {mostLikely[0]}
+                              </span>
+                              <span className="text-gray-500 text-[10px]">
+                                {" "}({(Number(mostLikely[1]) * 100).toFixed(1)}%)
+                              </span>
+                            </div>
+                          )}
+                        </>
+                      );
+                    })()}
+
+                    <div className="space-y-2 text-xs border-t border-gray-800 pt-3">
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Best case</span>
+                        <span className="font-bold" style={{ color: zoneFor(hoveredEntry.min_position).hex }}>
+                          {hoveredEntry.min_position}
+                          {hoveredEntry.cl_certain ? " ✅" : hoveredEntry.cl_possible ? " (CL?)" : ""}
+                        </span>
                       </div>
-                      {mostLikely && (
-                        <div className="text-xs mb-3">
-                          <span className="text-gray-400">Most likely: </span>
-                          <span className="font-bold" style={{ color: zoneFor(Number(mostLikely[0])).hex }}>
-                            {mostLikely[0]}
-                          </span>
-                          <span className="text-gray-500 text-[10px]">
-                            {" "}({(Number(mostLikely[1]) * 100).toFixed(1)}%)
-                          </span>
-                        </div>
-                      )}
-                    </>
-                  );
-                })()}
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Worst case</span>
+                        <span className="font-bold" style={{ color: zoneFor(hoveredEntry.max_position).hex }}>
+                          {hoveredEntry.max_position}
+                          {hoveredEntry.relegated_certain ? " 💀" : hoveredEntry.relegated_possible ? " (risk)" : ""}
+                        </span>
+                      </div>
+                    </div>
 
-                <div className="space-y-2 text-xs border-t border-gray-800 pt-3">
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Best case</span>
-                    <span className="font-bold" style={{ color: zoneFor(hoveredEntry.min_position).hex }}>
-                      {hoveredEntry.min_position}
-                      {hoveredEntry.cl_certain ? " ✅" : hoveredEntry.cl_possible ? " (CL?)" : ""}
-                    </span>
+                    {hoveredEntry.best_case.length > 0 && (
+                      <div className="mt-3 border-t border-gray-800 pt-3">
+                        <div className="text-[9px] text-green-500 uppercase tracking-wide mb-1">Best case needs</div>
+                        <div className="text-[10px] text-gray-400 leading-snug">{hoveredEntry.best_case.join(" · ")}</div>
+                      </div>
+                    )}
+                    {hoveredEntry.worst_case.length > 0 && (
+                      <div className="mt-2">
+                        <div className="text-[9px] text-red-500 uppercase tracking-wide mb-1">Worst case if</div>
+                        <div className="text-[10px] text-gray-400 leading-snug">{hoveredEntry.worst_case.join(" · ")}</div>
+                      </div>
+                    )}
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Worst case</span>
-                    <span className="font-bold" style={{ color: zoneFor(hoveredEntry.max_position).hex }}>
-                      {hoveredEntry.max_position}
-                      {hoveredEntry.relegated_certain ? " 💀" : hoveredEntry.relegated_possible ? " (risk)" : ""}
-                    </span>
-                  </div>
-                </div>
-
-                {hoveredEntry.best_case.length > 0 && (
-                  <div className="mt-3 border-t border-gray-800 pt-3">
-                    <div className="text-[9px] text-green-500 uppercase tracking-wide mb-1">Best case needs</div>
-                    <div className="text-[10px] text-gray-400 leading-snug">{hoveredEntry.best_case.join(" · ")}</div>
-                  </div>
-                )}
-                {hoveredEntry.worst_case.length > 0 && (
-                  <div className="mt-2">
-                    <div className="text-[9px] text-red-500 uppercase tracking-wide mb-1">Worst case if</div>
-                    <div className="text-[10px] text-gray-400 leading-snug">{hoveredEntry.worst_case.join(" · ")}</div>
+                ) : (
+                  <div className="text-gray-700 text-xs text-center mt-12">
+                    Hover a team<br />to see their spread
                   </div>
                 )}
               </div>
-            ) : (
-              <div className="text-gray-700 text-xs text-center mt-12">
-                Hover a team<br />to see their spread
+
+              {/* Position change log */}
+              <div className="border-t border-gray-800 p-4 h-48 overflow-y-auto flex-shrink-0">
+                <div className="text-[9px] text-gray-600 uppercase tracking-widest mb-2">Live movement</div>
+                {posHistory.length === 0 ? (
+                  <div className="text-gray-700 text-[10px]">Waiting...</div>
+                ) : (
+                  posHistory.map((h, i) => (
+                    <div key={i} className="flex items-center justify-between text-[10px] py-0.5">
+                      <span className="text-gray-700 font-mono w-14">{h.time}</span>
+                      <span className="text-gray-400 flex-1 truncate">{h.team}</span>
+                      <span className={`font-bold ml-1 ${h.delta > 0 ? "text-green-500" : "text-red-500"}`}>
+                        {h.delta > 0 ? "▲" : "▼"}{Math.abs(h.delta)}
+                      </span>
+                    </div>
+                  ))
+                )}
               </div>
-            )}
-          </div>
 
-          </div>)}
-
-          {/* Position change log — only in spread tab */}
-          {rightTab === "spread" && <div className="border-t border-gray-800 p-4 h-48 overflow-y-auto flex-shrink-0">
-            <div className="text-[9px] text-gray-600 uppercase tracking-widest mb-2">Live movement</div>
-            {posHistory.length === 0 ? (
-              <div className="text-gray-700 text-[10px]">Waiting...</div>
-            ) : (
-              posHistory.map((h, i) => (
-                <div key={i} className="flex items-center justify-between text-[10px] py-0.5">
-                  <span className="text-gray-700 font-mono w-14">{h.time}</span>
-                  <span className="text-gray-400 flex-1 truncate">{h.team}</span>
-                  <span className={`font-bold ml-1 ${h.delta > 0 ? "text-green-500" : "text-red-500"}`}>
-                    {h.delta > 0 ? "▲" : "▼"}{Math.abs(h.delta)}
-                  </span>
-                </div>
-              ))
-            )}
-          </div>
-
-          </div>}
-
-          {/* Sealed positions — only in spread tab */}
-          {rightTab === "spread" && <div className="border-t border-gray-800 p-4 flex-shrink-0">
-            <div className="text-[9px] text-gray-600 uppercase tracking-widest mb-2">Positions sealed</div>
-            {spreads.filter((s) => s.locked).length === 0 ? (
-              <div className="text-gray-700 text-[10px]">None yet</div>
-            ) : (
-              <div className="space-y-0.5">
-                {spreads.filter((s) => s.locked).map((s) => (
-                  <div key={s.team} className="flex justify-between text-[11px]">
-                    <span className="text-gray-300">{s.team}</span>
-                    <span className="font-bold" style={{ color: zoneFor(s.current_position).hex }}>
-                      {s.current_position}
-                    </span>
+              {/* Sealed positions */}
+              <div className="border-t border-gray-800 p-4 flex-shrink-0">
+                <div className="text-[9px] text-gray-600 uppercase tracking-widest mb-2">Positions sealed</div>
+                {spreads.filter((s) => s.locked).length === 0 ? (
+                  <div className="text-gray-700 text-[10px]">None yet</div>
+                ) : (
+                  <div className="space-y-0.5">
+                    {spreads.filter((s) => s.locked).map((s) => (
+                      <div key={s.team} className="flex justify-between text-[11px]">
+                        <span className="text-gray-300">{s.team}</span>
+                        <span className="font-bold" style={{ color: zoneFor(s.current_position).hex }}>
+                          {s.current_position}
+                        </span>
+                      </div>
+                    ))}
                   </div>
-                ))}
+                )}
               </div>
-            )}
-          </div>}
+            </>
+          )}
         </div>
       </div>
 
