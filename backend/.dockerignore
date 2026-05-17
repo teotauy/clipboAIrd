@@ -1,0 +1,5 @@
+.venv
+__pycache__
+*.pyc
+season_state.json
+.env
