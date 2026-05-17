@@ -1,0 +1,242 @@
+"""
+Position Spread Calculator.
+For each club, computes the range of final league positions still
+mathematically possible given live scores across all 10 MW38 fixtures.
+
+3^10 = 59,049 permutations — fast enough to run on every significant event.
+"""
+
+from dataclasses import dataclass, field
+from itertools import product
+
+from live_ingestion import LiveMatchState
+from config import PRE_MATCH_STANDINGS
+
+
+@dataclass
+class ClubSpread:
+    team: str
+    current_points: int
+    current_gd: int
+    current_position: int
+    min_position: int        # best possible finish
+    max_position: int        # worst possible finish
+    min_points: int          # points if all remaining results go their way
+    max_points: int
+    locked: bool             # position is mathematically certain
+    cl_possible: bool        # can still finish top 4
+    cl_certain: bool         # guaranteed top 4 regardless of other results
+    relegated_possible: bool
+    relegated_certain: bool
+    # position → probability (0.0–1.0), only non-zero entries
+    position_distribution: dict[int, float] = field(default_factory=dict)
+    # Which result combos produce each extreme
+    best_case_scenario: list[str] = field(default_factory=list)
+    worst_case_scenario: list[str] = field(default_factory=list)
+
+
+def compute_spreads(
+    match_states: dict[int, LiveMatchState],
+) -> dict[str, ClubSpread]:
+    """
+    Main entry point. Takes all 10 live match states,
+    enumerates possible final results, returns spread per team.
+    """
+    # Build base points/gd from pre-season standings + live adjustments
+    base_points: dict[str, int] = {}
+    base_gd: dict[str, int] = {}
+    base_gf: dict[str, int] = {}
+
+    for team, data in PRE_MATCH_STANDINGS.items():
+        base_points[team] = data.get("points", 0)
+        base_gd[team] = data.get("gd", 0)
+        base_gf[team] = data.get("gf", 0)
+
+    # Apply goals already scored in live matches
+    for state in match_states.values():
+        _apply_live_goals(state, base_gf, base_gd)
+
+    # Separate finished matches from in-progress
+    finished: list[LiveMatchState] = []
+    live: list[LiveMatchState] = []
+
+    for state in match_states.values():
+        if state.status == "FT":
+            finished.append(state)
+        else:
+            live.append(state)
+
+    # Apply finished match points — locked in
+    committed_points = dict(base_points)
+    for state in finished:
+        _apply_result_points(state, committed_points)
+
+    # Enumerate possible outcomes for remaining live matches
+    # Each match: 0=home_win, 1=draw, 2=away_win
+    outcomes = list(product(range(3), repeat=len(live)))
+
+    # Per-team: frequency count across all permutations (position → count)
+    position_freq: dict[str, dict[int, int]] = {t: {} for t in committed_points}
+    best_scenarios: dict[str, list[str]] = {t: [] for t in committed_points}
+    worst_scenarios: dict[str, list[str]] = {t: [] for t in committed_points}
+    best_pos_seen: dict[str, int] = {t: 21 for t in committed_points}
+    worst_pos_seen: dict[str, int] = {t: 0 for t in committed_points}
+
+    total_permutations = len(outcomes)
+
+    for outcome_combo in outcomes:
+        perm_points = dict(committed_points)
+        perm_gd = dict(base_gd)
+        perm_gf = dict(base_gf)
+        scenario_desc = []
+
+        for i, outcome in enumerate(outcome_combo):
+            state = live[i]
+            home = state.home
+            away = state.away
+
+            if outcome == 0:  # home win
+                perm_points[home] = perm_points.get(home, 0) + 3
+                perm_gd[home] = perm_gd.get(home, 0) + 1
+                perm_gd[away] = perm_gd.get(away, 0) - 1
+                perm_gf[home] = perm_gf.get(home, 0) + 1
+                scenario_desc.append(f"{home} W")
+            elif outcome == 1:  # draw
+                perm_points[home] = perm_points.get(home, 0) + 1
+                perm_points[away] = perm_points.get(away, 0) + 1
+                scenario_desc.append(f"{home} D")
+            else:  # away win
+                perm_points[away] = perm_points.get(away, 0) + 3
+                perm_gd[away] = perm_gd.get(away, 0) + 1
+                perm_gd[home] = perm_gd.get(home, 0) - 1
+                perm_gf[away] = perm_gf.get(away, 0) + 1
+                scenario_desc.append(f"{away} W")
+
+        sorted_teams = _sort_table(perm_points, perm_gd, perm_gf)
+        positions = {team: i + 1 for i, team in enumerate(sorted_teams)}
+
+        for team in committed_points:
+            pos = positions.get(team, 20)
+            position_freq[team][pos] = position_freq[team].get(pos, 0) + 1
+
+            if pos < best_pos_seen[team]:
+                best_pos_seen[team] = pos
+                best_scenarios[team] = scenario_desc[:3]
+            if pos > worst_pos_seen[team]:
+                worst_pos_seen[team] = pos
+                worst_scenarios[team] = scenario_desc[:3]
+
+    # Build ClubSpread objects
+    current_table = _sort_table(
+        committed_points,
+        {t: base_gd.get(t, 0) for t in committed_points},
+        {t: base_gf.get(t, 0) for t in committed_points},
+    )
+    current_positions = {team: i + 1 for i, team in enumerate(current_table)}
+
+    spreads: dict[str, ClubSpread] = {}
+
+    for team in committed_points:
+        freq = position_freq.get(team, {})
+        positions = list(freq.keys()) or [current_positions.get(team, 10)]
+        min_pos = min(positions)
+        max_pos = max(positions)
+
+        max_pts = max(
+            committed_points.get(team, 0) + _max_remaining_points(team, live),
+            committed_points.get(team, 0),
+        )
+        min_pts = committed_points.get(team, 0)
+
+        # Normalise frequency → probability
+        distribution = {
+            pos: count / total_permutations
+            for pos, count in freq.items()
+        }
+
+        spreads[team] = ClubSpread(
+            team=team,
+            current_points=committed_points.get(team, 0),
+            current_gd=base_gd.get(team, 0),
+            current_position=current_positions.get(team, 10),
+            min_position=min_pos,
+            max_position=max_pos,
+            min_points=min_pts,
+            max_points=max_pts,
+            locked=(min_pos == max_pos),
+            cl_possible=min_pos <= 4,
+            cl_certain=max_pos <= 4,
+            relegated_possible=max_pos >= 18,
+            relegated_certain=min_pos >= 18,
+            position_distribution=distribution,
+            best_case_scenario=best_scenarios.get(team, []),
+            worst_case_scenario=worst_scenarios.get(team, []),
+        )
+
+    return spreads
+
+
+# ─── HELPERS ─────────────────────────────────────────────────────────────────
+
+def _apply_live_goals(state: LiveMatchState, gf: dict, gd: dict):
+    gf[state.home] = gf.get(state.home, 0) + state.home_goals
+    gf[state.away] = gf.get(state.away, 0) + state.away_goals
+    gd[state.home] = gd.get(state.home, 0) + state.home_goals - state.away_goals
+    gd[state.away] = gd.get(state.away, 0) + state.away_goals - state.home_goals
+
+
+def _apply_result_points(state: LiveMatchState, points: dict):
+    if state.home_goals > state.away_goals:
+        points[state.home] = points.get(state.home, 0) + 3
+    elif state.away_goals > state.home_goals:
+        points[state.away] = points.get(state.away, 0) + 3
+    else:
+        points[state.home] = points.get(state.home, 0) + 1
+        points[state.away] = points.get(state.away, 0) + 1
+
+
+def _sort_table(points: dict, gd: dict, gf: dict) -> list[str]:
+    return sorted(
+        points.keys(),
+        key=lambda t: (points.get(t, 0), gd.get(t, 0), gf.get(t, 0)),
+        reverse=True,
+    )
+
+
+def _max_remaining_points(team: str, live_states: list[LiveMatchState]) -> int:
+    bonus = 0
+    for state in live_states:
+        if team in (state.home, state.away) and state.status != "FT":
+            bonus += 3
+    return bonus
+
+
+def spreads_to_json(spreads: dict[str, ClubSpread]) -> list[dict]:
+    """Sorted by current position for the table view."""
+    sorted_teams = sorted(spreads.values(), key=lambda s: s.current_position)
+    return [
+        {
+            "team": s.team,
+            "current_position": s.current_position,
+            "current_points": s.current_points,
+            "current_gd": s.current_gd,
+            "min_position": s.min_position,
+            "max_position": s.max_position,
+            "min_points": s.min_points,
+            "max_points": s.max_points,
+            "locked": s.locked,
+            "cl_possible": s.cl_possible,
+            "cl_certain": s.cl_certain,
+            "relegated_possible": s.relegated_possible,
+            "relegated_certain": s.relegated_certain,
+            "best_case": s.best_case_scenario,
+            "worst_case": s.worst_case_scenario,
+            "spread_width": s.max_position - s.min_position,
+            # Keyed by string for JSON; position → probability 0.0–1.0
+            "position_distribution": {
+                str(pos): round(prob, 4)
+                for pos, prob in s.position_distribution.items()
+            },
+        }
+        for s in sorted_teams
+    ]
