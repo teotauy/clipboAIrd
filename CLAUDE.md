@@ -4,7 +4,7 @@
 Brooklyn OLSC member · Kop of Coffee writer · Liverpool supporter · highest-ranked confirmed member in the Brooklyn fantasy league.
 
 **Repo:** https://github.com/teotauy/clipboAIrd
-**Production URL:** https://clioboAIrd.colbyangusblack.com (Vercel, frontend)
+**Production URL:** https://clipboAIrd.colbyangusblack.com (Vercel, frontend)
 **Backend:** FastAPI — Railway or Fly.io deploy not yet done
 
 ---
@@ -422,13 +422,13 @@ Hardcoded in `FPLPanel.tsx` as `BROOKLYN_MEMBERS`. `entry_id` is now included in
 1. Connect repo at https://github.com/teotauy/clipboAIrd to Vercel
 2. Set **Root Directory** to `frontend`
 3. Add env var: `NEXT_PUBLIC_API_BASE=<railway-url>`
-4. Add custom domain: `clioboAIrd.colbyangusblack.com`
+4. Add custom domain: `clipboAIrd.colbyangusblack.com`
 
 ### DNS → Squarespace
 In Squarespace DNS settings, add:
 ```
 Type:  CNAME
-Host:  clioboAIrd
+Host:  clipboAIrd
 Value: cname.vercel-dns.com
 ```
 
@@ -443,7 +443,7 @@ Value: cname.vercel-dns.com
 
 - [ ] **Deploy backend to Railway** — get the URL, plug into Vercel env vars
 - [ ] **Vercel deploy** — connect repo, set root dir to `frontend`, add custom domain
-- [ ] **Squarespace DNS** — add CNAME for `clioboAIrd`
+- [ ] **Squarespace DNS** — add CNAME for `clipboAIrd`
 - [ ] **Fix `_registry` dead reference** in `omniscient_engine.py` `_calculate_anfield_sentiment`
 - [ ] **Simulation / replay mode** — feed pre-recorded events for testing without a live match
 - [ ] **"What If" mode** — UI to manually set scores on spread table and watch distributions shift in real time
