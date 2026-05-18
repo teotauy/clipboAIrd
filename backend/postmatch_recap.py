@@ -16,7 +16,8 @@ EUROPEAN_LABELS = {
     4: "🏆 Champions League",
     5: "🏆 Champions League",
     6: "🔵 Europa League",
-    7: "🟠 Conference League",
+    7: "🔵 Europa League",
+    8: "🟠 Conference League Qualifier",
 }
 
 RELEGATION_POSITIONS = {18, 19, 20}
@@ -86,8 +87,8 @@ def build_final_recap(engine: OmniscientEngine, match_states: dict[int, LiveMatc
                 f"Champions League football confirmed. "
                 f"The Kop gets what it deserves."
             )
-        elif lfc_entry["position"] == 6:
-            lfc_narrative = (
+        elif lfc_entry["position"] <= 7:
+lfc_narrative = (
                 f"Liverpool finish 6th. Europa League. "
                 f"Close, so close. The gap was just too much."
             )

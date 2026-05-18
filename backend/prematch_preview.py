@@ -8,9 +8,9 @@ from config import PRE_MATCH_STANDINGS, MATCHWEEK_38_FIXTURE_IDS, GOLDEN_BOOT_RA
 
 
 EUROPEAN_SPOTS = {
-    "champions_league": 4,
-    "europa_league": 6,
-    "conference_league": 7,
+    "champions_league": 5,
+    "europa_league": 7,
+    "conference_league_qualifier": 8,
 }
 
 
@@ -22,16 +22,12 @@ def _classify_stakes(home: str, away: str, standings: dict) -> list[str]:
 
     for team, data in [(home, home_data), (away, away_data)]:
         pos = data.get("position", 99)
-        if pos <= 4:
+        if pos <= 5:
             stakes.append(f"{team} defending a Champions League spot (currently {pos})")
-        elif pos == 5:
-            stakes.append(f"{team} chasing 4th — one win could see them in the CL")
-        elif pos <= 6:
+        elif pos <= 7:
             stakes.append(f"{team} in Europa League contention (pos {pos})")
-        elif pos == 7:
-            stakes.append(f"{team} holding Conference League place (pos {pos})")
         elif pos == 8:
-            stakes.append(f"{team} one result away from European football")
+            stakes.append(f"{team} holding Conference League qualifier spot (pos 8)")
         if pos >= 18:
             stakes.append(f"{team} IN THE RELEGATION ZONE (pos {pos}) — must win")
         elif pos == 17:
@@ -115,7 +111,7 @@ def build_full_preview(standings: dict, golden_boot: dict) -> dict:
             "europe": [
                 {"team": t, "position": d.get("position", 99), "points": d.get("points", 0)}
                 for t, d in sorted(standings.items(), key=lambda x: x[1].get("position", 99))
-                if d.get("position", 99) in range(3, 8)
+                if d.get("position", 99) in range(3, 9)
             ],
             "golden_boot": [
                 {"player": p, "team": d["team"], "goals": d["goals"]}

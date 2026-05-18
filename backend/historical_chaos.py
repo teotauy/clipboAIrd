@@ -237,9 +237,9 @@ class SeasonChaosEngine:
 
         positions = {t: i + 1 for i, t in enumerate(sorted_teams)}
 
-        top4 = sorted_teams[:4]
-        europa = sorted_teams[4:6]
-        conference = sorted_teams[6:7]
+        top4 = sorted_teams[:5]   # CL: top 5
+        europa = sorted_teams[5:7]  # Europa League: 6th–7th
+        conference = sorted_teams[7:8]  # Conference League qualifier: 8th
         relegated = sorted_teams[-3:] if len(sorted_teams) >= 20 else []
 
         if scorer_goals:
@@ -285,14 +285,14 @@ class SeasonChaosEngine:
                 lines.append(f"{team} entered the top 4")
 
             if team in before.europa and team not in after.europa:
-                lines.append(f"{team} lost their Europa League spot")
+                lines.append(f"{team} lost their Europa League place")
             elif team not in before.europa and team in after.europa:
-                lines.append(f"{team} moved into a Europa League spot")
+                lines.append(f"{team} moved into a Europa League place")
 
             if team in before.conference and team not in after.conference:
-                lines.append(f"{team} lost their Conference League spot")
+                lines.append(f"{team} lost the Conference League qualifier spot")
             elif team not in before.conference and team in after.conference:
-                lines.append(f"{team} moved into the Conference League spot")
+                lines.append(f"{team} moved into the Conference League qualifier spot")
 
             if team in before.relegated and team not in after.relegated:
                 lines.append(f"{team} climbed out of the relegation zone")
