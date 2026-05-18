@@ -48,8 +48,8 @@ interface DelphiPayload {
 
 const ZONES = [
   { from: 1,  to: 1,  label: "Champions",  color: "#c0a000", hex: "#c0a000" },
-  { from: 2,  to: 4,  label: "CL",         color: "#1a6fc4", hex: "#1a6fc4" },
-  { from: 5,  to: 6,  label: "Europa",     color: "#e07b20", hex: "#e07b20" },
+  { from: 2,  to: 5,  label: "CL",         color: "#1a6fc4", hex: "#1a6fc4" },
+  { from: 6,  to: 6,  label: "Europa",     color: "#e07b20", hex: "#e07b20" },
   { from: 7,  to: 7,  label: "Conference", color: "#2da44e", hex: "#2da44e" },
   { from: 8,  to: 17, label: "",           color: "#374151", hex: "#374151" },
   { from: 18, to: 20, label: "Rel.",       color: "#c0392b", hex: "#c0392b" },
@@ -59,7 +59,7 @@ function zoneFor(pos: number) {
   return ZONES.find((z) => pos >= z.from && pos <= z.to) ?? ZONES[4];
 }
 
-const ZONE_BOUNDARY_POSITIONS = [1, 4, 6, 7, 17]; // lines drawn after these
+const ZONE_BOUNDARY_POSITIONS = [1, 5, 6, 7, 17]; // lines drawn after these
 
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
 
@@ -204,7 +204,7 @@ export default function SpreadTable() {
 
   // ── Zone boundary row positions (which rows get a separator above them) ───
   // Positions 5, 7, 8, 18 get a zone line drawn above them
-  const ZONE_TOP_BOUNDARIES = new Set([2, 5, 7, 8, 18]);
+  const ZONE_TOP_BOUNDARIES = new Set([2, 6, 7, 8, 18]);
 
   return (
     <div className="min-h-screen bg-gray-950 text-white flex flex-col overflow-hidden">

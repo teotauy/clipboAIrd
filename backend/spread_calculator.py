@@ -24,8 +24,8 @@ class ClubSpread:
     min_points: int          # points if all remaining results go their way
     max_points: int
     locked: bool             # position is mathematically certain
-    cl_possible: bool        # can still finish top 4
-    cl_certain: bool         # guaranteed top 4 regardless of other results
+    cl_possible: bool        # can still finish top 5
+    cl_certain: bool         # guaranteed top 5 regardless of other results
     relegated_possible: bool
     relegated_certain: bool
     # position → probability (0.0–1.0), only non-zero entries
@@ -164,8 +164,8 @@ def compute_spreads(
             min_points=min_pts,
             max_points=max_pts,
             locked=(min_pos == max_pos),
-            cl_possible=min_pos <= 4,
-            cl_certain=max_pos <= 4,
+            cl_possible=min_pos <= 5,
+            cl_certain=max_pos <= 5,
             relegated_possible=max_pos >= 18,
             relegated_certain=min_pos >= 18,
             position_distribution=distribution,

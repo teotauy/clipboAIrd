@@ -14,7 +14,7 @@ EUROPEAN_LABELS = {
     2: "🏆 Champions League",
     3: "🏆 Champions League",
     4: "🏆 Champions League",
-    5: "🔵 Europa League",
+    5: "🏆 Champions League",
     6: "🔵 Europa League",
     7: "🟠 Conference League",
 }
@@ -80,15 +80,15 @@ def build_final_recap(engine: OmniscientEngine, match_states: dict[int, LiveMatc
     # Liverpool-specific narrative
     lfc_entry = next((t for t in final_table if t["team"] == "Liverpool"), None)
     if lfc_entry:
-        if lfc_entry["position"] <= 4:
+        if lfc_entry["position"] <= 5:
             lfc_narrative = (
                 f"Liverpool finish {_ordinal(lfc_entry['position'])}. "
                 f"Champions League football confirmed. "
                 f"The Kop gets what it deserves."
             )
-        elif lfc_entry["position"] == 5:
+        elif lfc_entry["position"] == 6:
             lfc_narrative = (
-                f"Liverpool finish 5th. Europa League. "
+                f"Liverpool finish 6th. Europa League. "
                 f"Close, so close. The gap was just too much."
             )
         else:
