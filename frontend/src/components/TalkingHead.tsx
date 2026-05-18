@@ -142,17 +142,20 @@ export default function TalkingHead({
         draggable={false}
       />
 
-      {/* Mouth — adjust `top` % to match your face photo */}
+      {/* Mouth overlay — positioned over Colby's actual mouth */}
       <div
-        className="absolute left-1/2 -translate-x-1/2 rounded-full bg-[#1a0a00]"
+        className="absolute left-1/2 -translate-x-1/2"
         style={{
-          top: "68%",
-          width: mouthOpen ? `${36 * mouthScale}px` : `${32 * mouthScale}px`,
-          height: mouthOpen ? `${22 * mouthScale}px` : `${6 * mouthScale}px`,
-          borderRadius: mouthOpen ? "50%" : "4px",
-          transition: "height 0.06s ease, width 0.06s ease",
-          boxShadow: mouthOpen ? "inset 0 3px 6px rgba(255,255,255,0.15)" : "none",
-          border: mouthOpen ? `${mouthScale * 2}px solid #8B4513` : "none",
+          top: "72%",
+          width: mouthOpen ? `${44 * mouthScale}px` : `${38 * mouthScale}px`,
+          height: mouthOpen ? `${28 * mouthScale}px` : `${8 * mouthScale}px`,
+          borderRadius: mouthOpen ? "50%" : "6px",
+          background: mouthOpen
+            ? "radial-gradient(ellipse at center, #cc2200 0%, #8B0000 60%, #1a0000 100%)"
+            : "#c0392b",
+          transition: "height 0.06s ease, width 0.06s ease, border-radius 0.06s ease",
+          boxShadow: mouthOpen ? "inset 0 2px 8px rgba(0,0,0,0.6), 0 0 4px rgba(200,50,0,0.4)" : "none",
+          border: mouthOpen ? `${Math.max(1, mouthScale * 2)}px solid #5a1010` : "none",
         }}
       />
 
