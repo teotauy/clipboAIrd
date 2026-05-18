@@ -137,13 +137,12 @@ export default function DelphiDigitalDouble() {
 
   return (
     <main className="min-h-screen bg-gray-950 text-white">
-      {/* Header */}
-      <header className="text-center py-6 border-b border-gray-800">
+      <div className="text-center py-6 border-b border-gray-800">
         <h1 className="text-3xl font-bold text-red-500">DELPHI DIGITAL DOUBLE</h1>
         <p className="text-gray-500 text-sm mt-1">
           Live from somewhere in Brooklyn, emotionally compromised
         </p>
-      </header>
+      </div>
 
       <div className="max-w-5xl mx-auto px-4 py-8 grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
 
