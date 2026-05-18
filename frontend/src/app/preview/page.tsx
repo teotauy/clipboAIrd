@@ -43,12 +43,25 @@ function stakeColor(stake: string): string {
 
 export default function PreviewPage() {
   const [data, setData] = useState<PreviewData | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetch(`${API_BASE}/preview`)
-      .then((r) => r.json())
-      .then(setData);
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
+      .then(setData)
+      .catch((e) => setError(String(e)));
   }, []);
+
+  if (error) {
+    return (
+      <main className="min-h-screen bg-gray-950 text-white flex items-center justify-center">
+        <div className="text-red-400 text-sm font-mono">Error: {error}<br/>API: {API_BASE}</div>
+      </main>
+    );
+  }
 
   if (!data) {
     return (
