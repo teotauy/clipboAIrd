@@ -1,11 +1,11 @@
 # clipboAIrd — Active Subscriptions
 
-| Service | Plan | Cost | Purpose | Cancel After |
-|---|---|---|---|---|
-| API-Football | Pro | $19/mo | Live match data, standings, scorers | ✅ After MW38 (mid-May 2026) |
-| Fly.io | Pay-as-you-go | ~$2/mo | Backend hosting (FastAPI) | After season |
-| Vercel | Free/Pro | $0–20/mo | Frontend hosting (Next.js) | Keep if reusing |
-| ElevenLabs | Free | $0 | TTS for goals/HT/FT (~10k chars/mo) | — |
+| Service | Plan | Started | Cost | What it gets us | Cancel After |
+|---|---|---|---|---|---|
+| API-Football | Pro | 2026-05-17 | $19/mo | 7,500 req/day, 2025/26 season data — live fixtures, standings, scorers, events | ✅ 2026-05-25 |
+| Fly.io | Pay-as-you-go | 2026-05-17 | ~$2/mo | Always-on FastAPI backend, 256MB shared VM, Newark region | After MW38 |
+| Vercel | Free (Hobby) | 2026-05-17 | $0 | Next.js frontend hosting, auto-deploys from GitHub, SSL | Keep |
+| ElevenLabs | Free | 2026-05-17 | $0 | 10k chars/mo TTS — goals/HT/FT on the talking head | — |
 
 ## Notes
 - **API-Football Pro** — upgrade before MW38, cancel immediately after. Key: set as Fly secret `API_FOOTBALL_KEY`. Dashboard: api-sports.io
