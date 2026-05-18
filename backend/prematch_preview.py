@@ -108,14 +108,22 @@ def build_full_preview(standings: dict, golden_boot: dict) -> dict:
         "day_summary": day_summary,
         "fixtures": fixtures_preview,
         "key_battles": {
-            "champions_league": [t for t, d in standings.items() if d.get("position", 99) in [3, 4, 5]],
+            "europe": [
+                {"team": t, "position": d.get("position", 99), "points": d.get("points", 0)}
+                for t, d in sorted(standings.items(), key=lambda x: x[1].get("position", 99))
+                if d.get("position", 99) in range(3, 8)
+            ],
             "golden_boot": [
                 {"player": p, "team": d["team"], "goals": d["goals"]}
                 for p, d in sorted(golden_boot.items(), key=lambda x: x[1]["goals"], reverse=True)[:3]
             ],
-            "relegation": [
-                {"team": t, "points": standings.get(t, {}).get("points", 0), "position": standings.get(t, {}).get("position", 20)}
-                for t in RELEGATION_ZONE_TEAMS
-            ],
+            "relegation": sorted(
+                [
+                    {"team": t, "points": d.get("points", 0), "position": d.get("position", 20)}
+                    for t, d in standings.items()
+                    if d.get("position", 99) >= 15  # anyone close enough to be caught
+                ],
+                key=lambda x: x["position"],
+            ),
         },
     }

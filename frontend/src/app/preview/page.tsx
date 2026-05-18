@@ -20,7 +20,7 @@ interface PreviewData {
   day_summary: string;
   fixtures: FixturePreview[];
   key_battles: {
-    champions_league: string[];
+    europe: { team: string; position: number; points: number }[];
     golden_boot: { player: string; team: string; goals: number }[];
     relegation: { team: string; points: number; position: number }[];
   };
@@ -83,14 +83,15 @@ export default function PreviewPage() {
 
       {/* Key Battles */}
       <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
-        {/* CL race */}
+        {/* Europe race */}
         <div className="bg-gray-900 rounded-xl p-5 border border-blue-900">
           <div className="text-xs text-blue-400 uppercase tracking-widest mb-3">
-            🏆 Champions League Contenders
+            🌍 European Places
           </div>
-          {data.key_battles.champions_league.map((team) => (
-            <div key={team} className="text-sm text-white py-1 border-b border-gray-800 last:border-0">
-              {team}
+          {data.key_battles.europe.map((entry) => (
+            <div key={entry.team} className="text-sm py-1 border-b border-gray-800 last:border-0 flex justify-between">
+              <span className="text-white">#{entry.position} {entry.team}</span>
+              <span className="text-gray-500 text-xs">{entry.points}pts</span>
             </div>
           ))}
         </div>
