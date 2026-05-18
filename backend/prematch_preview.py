@@ -121,7 +121,11 @@ def build_full_preview(standings: dict, golden_boot: dict) -> dict:
                 [
                     {"team": t, "points": d.get("points", 0), "position": d.get("position", 20)}
                     for t, d in standings.items()
-                    if d.get("position", 99) >= 15  # anyone close enough to be caught
+                    if d.get("points", 0) <= max(
+                        (v.get("points", 0) + 3)
+                        for v in standings.values()
+                        if v.get("position", 99) >= 18
+                    )
                 ],
                 key=lambda x: x["position"],
             ),
