@@ -134,10 +134,12 @@ def _chaos_goal_dict(g) -> dict:
         "team": g.team,
         "opponent": g.opponent,
         "minute": g.minute,
+        "matchweek": g.matchweek,
         "score_at_time": g.score_at_time,
         "havoc_score": g.havoc_score,
         "breakdown": g.breakdown,
         "narrative": g.narrative,
+        "ramifications": g.ramifications,
     }
 
 

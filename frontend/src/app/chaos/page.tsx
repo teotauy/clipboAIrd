@@ -9,10 +9,12 @@ interface ChaosGoal {
   team: string;
   opponent: string;
   minute: number;
+  matchweek: number;
   score_at_time: string;
   havoc_score: number;
   narrative: string;
   breakdown?: Record<string, number>;
+  ramifications?: string[];
 }
 
 interface ChaosData {
@@ -90,19 +92,32 @@ export default function ChaosPage() {
               {winner.scorer}
             </div>
             <div className="text-gray-400 text-sm mb-4">
+              {winner.matchweek > 0 && <span className="text-yellow-700 mr-2">MW{winner.matchweek}</span>}
               {winner.team} vs {winner.opponent} · {winner.minute}' · {winner.score_at_time}
             </div>
             <div className="text-yellow-300 text-5xl font-black mb-4">
               {winner.havoc_score.toFixed(1)}
               <span className="text-xl text-yellow-600 ml-2">havoc pts</span>
             </div>
-            <p className="text-gray-300 text-sm leading-relaxed max-w-xl mx-auto">
-              {winner.narrative}
-            </p>
+
+            {/* Ramifications */}
+            {winner.ramifications && winner.ramifications.length > 0 && (
+              <div className="mb-5 bg-black/30 rounded-xl p-4 text-left max-w-xl mx-auto">
+                <div className="text-xs text-yellow-600 uppercase tracking-widest mb-2">Without this goal...</div>
+                <ul className="space-y-1">
+                  {winner.ramifications.map((r, i) => (
+                    <li key={i} className="text-sm text-gray-300 flex gap-2">
+                      <span className="text-yellow-700 flex-shrink-0">→</span>
+                      {r} wouldn&apos;t have happened
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
             {/* Breakdown */}
             {winner.breakdown && (
-              <div className="mt-6 grid grid-cols-2 gap-2 text-left max-w-md mx-auto">
+              <div className="mt-4 grid grid-cols-2 gap-2 text-left max-w-md mx-auto">
                 {Object.entries(winner.breakdown).map(([key, val]) => (
                   <div key={key} className="bg-black/30 rounded-lg px-3 py-2">
                     <div className="text-xs text-gray-400">{BREAKDOWN_LABELS[key] || key}</div>
@@ -137,9 +152,16 @@ export default function ChaosPage() {
                   </div>
                 </div>
                 <div className="text-xs text-gray-500 mb-1">
+                  {goal.matchweek > 0 && <span className="text-yellow-800 mr-1">MW{goal.matchweek} ·</span>}
                   {goal.team} vs {goal.opponent} · {goal.minute}' · {goal.score_at_time}
                 </div>
-                <div className="text-xs text-gray-400 leading-snug">{goal.narrative}</div>
+                {goal.ramifications && goal.ramifications.length > 0 && (
+                  <div className="text-xs text-gray-500 mb-1">
+                    {goal.ramifications.slice(0, 2).map((r, i) => (
+                      <span key={i} className="mr-2">→ {r}</span>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           ))}

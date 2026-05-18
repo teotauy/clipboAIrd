@@ -42,6 +42,8 @@ class ChaosScore:
     havoc_score: float
     breakdown: dict  # which metrics shifted and by how much
     narrative: str
+    matchweek: int = 0
+    ramifications: list[str] = field(default_factory=list)
 
 
 class SeasonChaosEngine:
@@ -120,6 +122,16 @@ class SeasonChaosEngine:
         scorer_goals: dict[str, int] = {}
         scorer_team: dict[str, str] = {}
 
+        # Build fixture_id → matchweek lookup
+        fixture_mw: dict[int, int] = {}
+        for f in sorted_fixtures:
+            fid = f["fixture"]["id"]
+            round_str = f.get("league", {}).get("round", "")
+            try:
+                fixture_mw[fid] = int(round_str.split(" - ")[-1])
+            except (ValueError, IndexError):
+                fixture_mw[fid] = 0
+
         for fixture in sorted_fixtures:
             fid = fixture["fixture"]["id"]
             home = fixture["teams"]["home"]["name"]
@@ -191,6 +203,8 @@ class SeasonChaosEngine:
                             minute, score, breakdown,
                             f"{home_score}–{away_score}"
                         ),
+                        matchweek=fixture_mw.get(fid, 0),
+                        ramifications=self._build_ramifications(before, after, scoring_team, conceding_team),
                     ))
 
             # Commit full-time result to standing points
@@ -245,6 +259,54 @@ class SeasonChaosEngine:
             golden_boot_leader=leader,
             golden_boot_goals=leader_goals,
         )
+
+    def _build_ramifications(
+        self,
+        before: StandingsSnapshot,
+        after: StandingsSnapshot,
+        scoring_team: str,
+        conceding_team: str,
+    ) -> list[str]:
+        lines = []
+
+        for team in set(list(before.team_positions.keys()) + list(after.team_positions.keys())):
+            b_pos = before.team_positions.get(team)
+            a_pos = after.team_positions.get(team)
+            if b_pos is None or a_pos is None or b_pos == a_pos:
+                continue
+
+            moved = b_pos - a_pos  # positive = climbed
+            direction = "climbed" if moved > 0 else "dropped"
+
+            # Boundary crossings
+            if team in before.top4 and team not in after.top4:
+                lines.append(f"{team} fell out of the top 4")
+            elif team not in before.top4 and team in after.top4:
+                lines.append(f"{team} entered the top 4")
+
+            if team in before.europa and team not in after.europa:
+                lines.append(f"{team} lost their Europa League spot")
+            elif team not in before.europa and team in after.europa:
+                lines.append(f"{team} moved into a Europa League spot")
+
+            if team in before.conference and team not in after.conference:
+                lines.append(f"{team} lost their Conference League spot")
+            elif team not in before.conference and team in after.conference:
+                lines.append(f"{team} moved into the Conference League spot")
+
+            if team in before.relegated and team not in after.relegated:
+                lines.append(f"{team} climbed out of the relegation zone")
+            elif team not in before.relegated and team in after.relegated:
+                lines.append(f"{team} dropped into the relegation zone")
+            elif abs(moved) >= 2 and team not in (scoring_team, conceding_team):
+                lines.append(f"{team} {direction} {abs(moved)} place{'s' if abs(moved) > 1 else ''}")
+
+        if before.golden_boot_leader and before.golden_boot_leader != after.golden_boot_leader:
+            lines.append(
+                f"{after.golden_boot_leader} overtook {before.golden_boot_leader} in the Golden Boot race"
+            )
+
+        return lines
 
     def _score_havoc(
         self,
