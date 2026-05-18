@@ -18,6 +18,7 @@ interface FixturePreview {
 
 interface PreviewData {
   day_summary: string;
+  standings_incomplete?: boolean;
   fixtures: FixturePreview[];
   key_battles: {
     europe: { team: string; position: number; points: number }[];
@@ -79,6 +80,11 @@ export default function PreviewPage() {
         <p className="text-gray-400 mt-3 max-w-2xl mx-auto text-sm leading-relaxed">
           {data.day_summary}
         </p>
+        {data.standings_incomplete && (
+          <div className="mt-4 inline-block bg-yellow-900/40 border border-yellow-700 text-yellow-400 text-xs px-4 py-2 rounded-lg">
+            ⚠ Standings not final — some clubs have not completed MW37. Re-run stage setup when all results are in.
+          </div>
+        )}
       </header>
 
       {/* Key Battles */}

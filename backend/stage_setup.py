@@ -80,6 +80,15 @@ async def fetch_standings(client: httpx.AsyncClient) -> dict:
         }
 
     print(f"  Found {len(standings)} teams")
+
+    played_counts = [d["played"] for d in standings.values()]
+    min_played = min(played_counts) if played_counts else 0
+    max_played = max(played_counts) if played_counts else 0
+    if min_played < max_played:
+        behind = [t for t, d in standings.items() if d["played"] < max_played]
+        print(f"  ⚠  Uneven matchweeks: {behind} have only played {min_played} (others at {max_played})")
+        print(f"  ⚠  Re-run stage_setup.py once all MW{max_played} fixtures are complete.")
+
     return standings
 
 

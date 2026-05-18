@@ -104,8 +104,12 @@ def build_full_preview(standings: dict, golden_boot: dict) -> dict:
         f"Nothing is settled. Everything is possible. Good luck."
     )
 
+    played_counts = [d.get("played", 37) for d in standings.values()]
+    standings_incomplete = bool(played_counts) and min(played_counts) < max(played_counts)
+
     return {
         "day_summary": day_summary,
+        "standings_incomplete": standings_incomplete,
         "fixtures": fixtures_preview,
         "key_battles": {
             "europe": [
