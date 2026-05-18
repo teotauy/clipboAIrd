@@ -88,8 +88,8 @@ def build_final_recap(engine: OmniscientEngine, match_states: dict[int, LiveMatc
                 f"The Kop gets what it deserves."
             )
         elif lfc_entry["position"] <= 7:
-lfc_narrative = (
-                f"Liverpool finish 6th. Europa League. "
+            lfc_narrative = (
+                f"Liverpool finish {_ordinal(lfc_entry['position'])}. Europa League. "
                 f"Close, so close. The gap was just too much."
             )
         else:
