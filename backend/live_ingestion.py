@@ -6,11 +6,34 @@ simultaneously and emits normalized match events to the Omniscient Engine.
 import asyncio
 import time
 from dataclasses import dataclass, field
+from datetime import datetime, timezone, timedelta
 from typing import Callable
 
 import httpx
 
 from config import API_FOOTBALL_KEY, API_FOOTBALL_BASE, MATCHWEEK_38_FIXTURE_IDS
+
+# Poll only within this window around kick-off (hours before / after)
+_POLL_WINDOW_HOURS_BEFORE = 1
+_POLL_WINDOW_HOURS_AFTER = 4
+
+
+def _match_day_active() -> bool:
+    """Return True only when we're within the polling window of any fixture."""
+    now = datetime.now(timezone.utc)
+    for fixture in MATCHWEEK_38_FIXTURE_IDS:
+        kick_off_str = fixture.get("date")
+        if not kick_off_str:
+            continue
+        try:
+            kick_off = datetime.fromisoformat(kick_off_str)
+        except ValueError:
+            continue
+        window_start = kick_off - timedelta(hours=_POLL_WINDOW_HOURS_BEFORE)
+        window_end = kick_off + timedelta(hours=_POLL_WINDOW_HOURS_AFTER)
+        if window_start <= now <= window_end:
+            return True
+    return False
 
 
 @dataclass
@@ -59,6 +82,10 @@ class LiveIngestionService:
         self._running = True
         async with httpx.AsyncClient() as client:
             while self._running:
+                if not _match_day_active():
+                    # Outside match-day window — check again in 5 minutes, don't burn quota
+                    await asyncio.sleep(300)
+                    continue
                 await self._poll_all_fixtures(client)
                 await asyncio.sleep(self.poll_interval)
 
