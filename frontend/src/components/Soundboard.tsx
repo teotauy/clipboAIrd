@@ -30,9 +30,16 @@ const PHRASES = [
   { label: "Scandal",           text: "It's a scandal. An absolute scandal.", emoji: "🤬", tier: "ref"     },
 
   // Pub classics
-  { label: "YNWA",              text: "You'll Never Walk Alone.",             emoji: "🎵", tier: "classic" },
-  { label: "This means more",   text: "We are Liverpool. This means more.",   emoji: "🏆", tier: "classic" },
-  { label: "Kop of Coffee",     text: "Kop of Coffee. Subscribe.",            emoji: "☕", tier: "classic" },
+  { label: "YNWA",                  text: "You'll Never Walk Alone.",                                         emoji: "🎵", tier: "classic" },
+  { label: "This means more",       text: "We are Liverpool. This means more.",                               emoji: "🏆", tier: "classic" },
+  { label: "No outside drinks",     text: "Hey! No outside drinks in the bar!",                               emoji: "🍺", tier: "classic" },
+  { label: "Sit down!",             text: "Sit down! I can't see!",                                           emoji: "🪑", tier: "classic" },
+  { label: "Get to your seat",      text: "The game's started, get to your seat!",                            emoji: "⚽", tier: "classic" },
+  { label: "Quiet!",                text: "Shhhh! Quiet! I'm trying to watch the game!",                      emoji: "🤫", tier: "classic" },
+  { label: "Sound up",              text: "Can we get the sound up please? Turn it up!",                      emoji: "🔊", tier: "classic" },
+  { label: "Another round",         text: "Same again? Same again. Someone's round.",                         emoji: "🍻", tier: "classic" },
+  { label: "Kop of Coffee",         text: "Kop of Coffee. Subscribe.",                                        emoji: "☕", tier: "classic" },
+  { label: "Brooklyn OLSC",         text: "Brooklyn Official Liverpool Supporters Club. Let's go!",           emoji: "🔴", tier: "classic" },
 ];
 
 const TIER_COLORS: Record<string, { bg: string; border: string; text: string; active: string }> = {
