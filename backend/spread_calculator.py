@@ -30,9 +30,11 @@ class ClubSpread:
     relegated_certain: bool
     # position → probability (0.0–1.0), only non-zero entries
     position_distribution: dict[int, float] = field(default_factory=dict)
-    # Which result combos produce each extreme
+    # Which result combos produce each extreme (empty if locked)
     best_case_scenario: list[str] = field(default_factory=list)
     worst_case_scenario: list[str] = field(default_factory=list)
+    # position → up to 5 example result combos that produce that position
+    position_scenarios: dict[int, list[list[str]]] = field(default_factory=dict)
 
 
 def compute_spreads(
@@ -81,6 +83,9 @@ def compute_spreads(
     worst_scenarios: dict[str, list[str]] = {t: [] for t in committed_points}
     best_pos_seen: dict[str, int] = {t: 21 for t in committed_points}
     worst_pos_seen: dict[str, int] = {t: 0 for t in committed_points}
+    # position → list of example scenario strings (capped at 5 per position per team)
+    pos_scenarios: dict[str, dict[int, list[list[str]]]] = {t: {} for t in committed_points}
+    _MAX_EXAMPLES = 5
 
     total_permutations = len(outcomes)
 
@@ -121,10 +126,15 @@ def compute_spreads(
 
             if pos < best_pos_seen[team]:
                 best_pos_seen[team] = pos
-                best_scenarios[team] = scenario_desc[:3]
+                best_scenarios[team] = list(scenario_desc)
             if pos > worst_pos_seen[team]:
                 worst_pos_seen[team] = pos
-                worst_scenarios[team] = scenario_desc[:3]
+                worst_scenarios[team] = list(scenario_desc)
+
+            # Store up to _MAX_EXAMPLES full scenario combos per position
+            bucket = pos_scenarios[team].setdefault(pos, [])
+            if len(bucket) < _MAX_EXAMPLES:
+                bucket.append(list(scenario_desc))
 
     # Build ClubSpread objects
     current_table = _sort_table(
@@ -154,6 +164,7 @@ def compute_spreads(
             for pos, count in freq.items()
         }
 
+        is_locked = (min_pos == max_pos)
         spreads[team] = ClubSpread(
             team=team,
             current_points=committed_points.get(team, 0),
@@ -163,14 +174,16 @@ def compute_spreads(
             max_position=max_pos,
             min_points=min_pts,
             max_points=max_pts,
-            locked=(min_pos == max_pos),
+            locked=is_locked,
             cl_possible=min_pos <= 5,
             cl_certain=max_pos <= 5,
             relegated_possible=max_pos >= 18,
             relegated_certain=min_pos >= 18,
             position_distribution=distribution,
-            best_case_scenario=best_scenarios.get(team, []),
-            worst_case_scenario=worst_scenarios.get(team, []),
+            # Sealed positions need no best/worst — it's done and dusted
+            best_case_scenario=[] if is_locked else best_scenarios.get(team, []),
+            worst_case_scenario=[] if is_locked else worst_scenarios.get(team, []),
+            position_scenarios=pos_scenarios.get(team, {}),
         )
 
     return spreads
@@ -237,6 +250,11 @@ def spreads_to_json(spreads: dict[str, ClubSpread]) -> list[dict]:
                 str(pos): round(prob, 4)
                 for pos, prob in s.position_distribution.items()
             },
+            # position → up to 5 example result combos (empty for locked teams)
+            "position_scenarios": {
+                str(pos): examples
+                for pos, examples in s.position_scenarios.items()
+            } if not s.locked else {},
         }
         for s in sorted_teams
     ]

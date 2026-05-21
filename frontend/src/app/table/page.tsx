@@ -26,6 +26,7 @@ interface SpreadEntry {
   worst_case: string[];
   spread_width: number;
   position_distribution: Record<string, number>;
+  position_scenarios: Record<string, string[][]>;
 }
 
 interface LiveScore {
@@ -47,27 +48,28 @@ interface DelphiPayload {
 // ─── ZONES ────────────────────────────────────────────────────────────────────
 
 const ZONES = [
-  { from: 1,  to: 1,  label: "Champions",  color: "#c0a000", hex: "#c0a000" },
-  { from: 2,  to: 5,  label: "CL",         color: "#1a6fc4", hex: "#1a6fc4" },
-  { from: 6,  to: 7,  label: "Europa",     color: "#e07b20", hex: "#e07b20" },
-  { from: 8,  to: 8,  label: "Conf. Q",    color: "#2da44e", hex: "#2da44e" },
-  { from: 9,  to: 17, label: "",           color: "#374151", hex: "#374151" },
-  { from: 18, to: 20, label: "Rel.",       color: "#c0392b", hex: "#c0392b" },
+  { from: 1,  to: 1,  label: "Champions",   short: "PL",   color: "#d4a500", hex: "#d4a500" },
+  { from: 2,  to: 5,  label: "Champ. Lg.",  short: "CL",   color: "#2563eb", hex: "#2563eb" },
+  { from: 6,  to: 7,  label: "Europa Lg.",  short: "EL",   color: "#ea6c1a", hex: "#ea6c1a" },
+  { from: 8,  to: 8,  label: "Conference",  short: "UECL", color: "#16a34a", hex: "#16a34a" },
+  { from: 9,  to: 17, label: "",            short: "",     color: "#1e2a3a", hex: "#1e2a3a" },
+  { from: 18, to: 20, label: "Relegation",  short: "REL",  color: "#dc2626", hex: "#dc2626" },
 ];
 
 function zoneFor(pos: number) {
   return ZONES.find((z) => pos >= z.from && pos <= z.to) ?? ZONES[4];
 }
 
-const ZONE_BOUNDARY_POSITIONS = [1, 5, 7, 8, 17]; // lines drawn after these
+// Positions after which a separator line is drawn
+const ZONE_BOUNDARY_AFTER = [1, 5, 7, 8, 17];
 
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
 
-const MIN_OPACITY = 0.06;
+const MIN_OPACITY = 0.05;
 
 function probToOpacity(prob: number, maxProb: number): number {
   if (prob === 0) return 0;
-  return MIN_OPACITY + (1 - MIN_OPACITY) * Math.pow(prob / maxProb, 0.45);
+  return MIN_OPACITY + (1 - MIN_OPACITY) * Math.pow(prob / maxProb, 0.4);
 }
 
 function eventVoiceTier(trigger: string, detail: string | null): VoiceTier {
@@ -88,13 +90,12 @@ export default function SpreadTable() {
   const [rightTab, setRightTab] = useState<"spread" | "fpl">("spread");
   const [posHistory, setPosHistory] = useState<{ time: string; team: string; delta: number }[]>([]);
 
-  // Talking head state
   const [speaking, setSpeaking] = useState(false);
   const [speakText, setSpeakText] = useState("");
   const [voiceTier, setVoiceTier] = useState<VoiceTier>("browser");
+  const [clickedCell, setClickedCell] = useState<{ team: string; pos: number } | null>(null);
   const speechQueue = useRef<DelphiPayload[]>([]);
   const processingRef = useRef(false);
-
   const prevSpreads = useRef<Record<string, SpreadEntry>>({});
 
   // ── Spread WebSocket ──────────────────────────────────────────────────────
@@ -111,27 +112,18 @@ export default function SpreadTable() {
       data.forEach((entry) => {
         const prev = prevSpreads.current[entry.team];
         if (!prev) return;
-
-        // Distribution changed — flash the row
-        const prevDist = JSON.stringify(prev.position_distribution);
-        const newDist = JSON.stringify(entry.position_distribution);
-        if (prevDist !== newDist) newFlash.add(entry.team);
-
-        // Position changed — log it
+        if (JSON.stringify(prev.position_distribution) !== JSON.stringify(entry.position_distribution)) {
+          newFlash.add(entry.team);
+        }
         if (prev.current_position !== entry.current_position) {
-          newHistory.push({
-            time: now,
-            team: entry.team,
-            delta: prev.current_position - entry.current_position,
-          });
+          newHistory.push({ time: now, team: entry.team, delta: prev.current_position - entry.current_position });
         }
       });
 
       if (newFlash.size > 0) {
         setFlashingTeams(newFlash);
-        setTimeout(() => setFlashingTeams(new Set()), 1200);
+        setTimeout(() => setFlashingTeams(new Set()), 1400);
       }
-
       if (newHistory.length > 0) {
         setPosHistory((h) => [...newHistory, ...h].slice(0, 40));
       }
@@ -153,14 +145,12 @@ export default function SpreadTable() {
     const ws = new WebSocket(API_BASE.replace("http", "ws") + "/ws");
     ws.onmessage = (e) => {
       const state = JSON.parse(e.data);
-      if (state.match_states) {
-        setLiveScores(Object.values(state.match_states));
-      }
+      if (state.match_states) setLiveScores(Object.values(state.match_states));
     };
     return () => ws.close();
   }, []);
 
-  // ── Delphi commentary feed → speech queue ─────────────────────────────────
+  // ── Delphi commentary → speech queue ─────────────────────────────────────
 
   const processQueue = useCallback(() => {
     const payload = speechQueue.current.shift();
@@ -187,227 +177,277 @@ export default function SpreadTable() {
 
   // ── Helpers ───────────────────────────────────────────────────────────────
 
-  const liveScoreFor = (team: string): string | null => {
-    const match = liveScores.find(
-      (s) => s.home === team || s.away === team
-    );
+  const liveScoreFor = (team: string): { score: string; status: string } | null => {
+    const match = liveScores.find((s) => s.home === team || s.away === team);
     if (!match || match.status === "NS") return null;
     const isHome = match.home === team;
     const myGoals = isHome ? match.home_goals : match.away_goals;
     const theirGoals = isHome ? match.away_goals : match.home_goals;
     const opp = isHome ? match.away : match.home;
     const min = match.status === "HT" ? "HT" : match.status === "FT" ? "FT" : `${match.minute}'`;
-    return `${myGoals}–${theirGoals} ${opp} (${min})`;
+    return { score: `${myGoals}–${theirGoals} ${opp}`, status: min };
   };
 
   const hoveredEntry = spreads.find((s) => s.team === hovered) ?? null;
+  const ZONE_TOP_BOUNDARIES = new Set(ZONE_BOUNDARY_AFTER.map((p) => p + 1));
 
-  // ── Zone boundary row positions (which rows get a separator above them) ───
-  // Positions 5, 7, 8, 18 get a zone line drawn above them
-  const ZONE_TOP_BOUNDARIES = new Set([2, 6, 8, 9, 18]);
+  // ─────────────────────────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white flex flex-col overflow-hidden">
+    <div
+      className="min-h-screen text-white flex flex-col overflow-hidden"
+      style={{ backgroundColor: "#070b18" }}
+    >
 
-      {/* ── Top bar ─────────────────────────────────────────────────────── */}
-      <header className="flex items-center justify-between px-6 py-3 border-b border-gray-800 flex-shrink-0">
-        <div>
-          <h1 className="text-xl font-black text-red-500 tracking-tight">ANFIELD ORACLE</h1>
-          <p className="text-[11px] text-gray-500 -mt-0.5">Matchweek 38 · Position Spread Matrix</p>
-        </div>
-        <div className="flex items-center gap-6 text-xs text-gray-500">
-          {ZONES.filter((z) => z.label).map((z) => (
-            <span key={z.label} className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: z.hex, opacity: 0.8 }} />
-              {z.label}
-              <span className="text-gray-700">({z.from}{z.from !== z.to ? `–${z.to}` : ""})</span>
+      {/* ── Zone legend bar ─────────────────────────────────────────────── */}
+      <div
+        className="flex items-center gap-6 px-6 py-2.5 flex-shrink-0"
+        style={{ borderBottom: "1px solid #0f1929" }}
+      >
+        <span className="text-[10px] text-gray-600 uppercase tracking-widest font-semibold mr-2">
+          MW38
+        </span>
+        {ZONES.filter((z) => z.label).map((z) => (
+          <span key={z.label} className="flex items-center gap-2">
+            <span
+              className="w-2 h-2 rounded-full"
+              style={{ backgroundColor: z.hex, boxShadow: `0 0 6px ${z.hex}` }}
+            />
+            <span className="text-[11px] font-medium" style={{ color: z.hex }}>
+              {z.short || z.label}
             </span>
-          ))}
-          <a href="/preview" className="text-gray-600 hover:text-gray-300 transition">Preview</a>
-          <a href="/recap" className="text-gray-600 hover:text-gray-300 transition">Recap</a>
-          <a href="/chaos" className="text-gray-600 hover:text-gray-300 transition">Chaos</a>
-        </div>
-      </header>
+            <span className="text-[10px]" style={{ color: "#1e3050" }}>
+              {z.from === z.to ? z.from : `${z.from}–${z.to}`}
+            </span>
+          </span>
+        ))}
+      </div>
 
       {/* ── Main layout ─────────────────────────────────────────────────── */}
       <div className="flex flex-1 overflow-hidden">
 
-        {/* ── Table ───────────────────────────────────────────────────── */}
-        <div className="flex-1 overflow-y-auto px-4 py-2">
+        {/* ── Spread table ─────────────────────────────────────────────── */}
+        <div className="flex-1 overflow-y-auto px-6 pt-3 pb-20">
 
-          {/* Position axis */}
-          <div className="flex mb-1 pl-[280px] pr-[52px]">
-            <div className="flex-1 relative h-4">
-              {[1, 4, 5, 6, 7, 10, 14, 17, 18, 20].map((pos) => (
-                <span
-                  key={pos}
-                  className="absolute -translate-x-1/2 text-[10px] font-mono"
-                  style={{
-                    left: `${((pos - 1) / (TOTAL_POSITIONS - 1)) * 100}%`,
-                    color: zoneFor(pos).hex,
-                    opacity: 0.7,
-                  }}
-                >
-                  {pos}
-                </span>
-              ))}
-              {/* Zone boundary tick marks */}
-              {ZONE_BOUNDARY_POSITIONS.map((pos) => (
-                <div
-                  key={pos}
-                  className="absolute top-0 bottom-0 w-px"
-                  style={{
-                    left: `${((pos - 0.5) / (TOTAL_POSITIONS - 1)) * 100}%`,
-                    backgroundColor: zoneFor(pos).hex,
-                    opacity: 0.2,
-                  }}
-                />
-              ))}
+          {/* Position axis header */}
+          <div className="flex mb-2" style={{ paddingLeft: "288px", paddingRight: "56px" }}>
+            <div className="flex-1 relative h-5">
+              {[1, 5, 6, 7, 8, 10, 14, 17, 18, 20].map((pos) => {
+                const z = zoneFor(pos);
+                return (
+                  <span
+                    key={pos}
+                    className="absolute -translate-x-1/2 text-[10px] font-mono font-semibold"
+                    style={{
+                      left: `${((pos - 1) / (TOTAL_POSITIONS - 1)) * 100}%`,
+                      color: z.hex === "#1e2a3a" ? "#2a3f5c" : z.hex,
+                      opacity: 0.8,
+                    }}
+                  >
+                    {pos}
+                  </span>
+                );
+              })}
             </div>
           </div>
 
-          {/* Rows */}
-          <div className="space-y-0.5">
-            {spreads.map((entry) => {
+          {/* Team rows */}
+          <div>
+            {spreads.map((entry, idx) => {
               const dist = entry.position_distribution;
               const maxProb = Math.max(...Object.values(dist), 0.001);
               const isLfc = entry.team === "Liverpool";
               const isHovered = hovered === entry.team;
               const isFlashing = flashingTeams.has(entry.team);
               const zone = zoneFor(entry.current_position);
-              const liveScore = liveScoreFor(entry.team);
+              const live = liveScoreFor(entry.team);
               const dotLeft = ((entry.current_position - 1) / (TOTAL_POSITIONS - 1)) * 100;
-              const showBoundaryAbove = ZONE_TOP_BOUNDARIES.has(entry.current_position);
-              const mostLikelyPos = Object.entries(dist).sort((a, b) => b[1] - a[1])[0];
+              const showSeparatorAbove = ZONE_TOP_BOUNDARIES.has(entry.current_position);
+              const sortedDist = Object.entries(dist).sort((a, b) => b[1] - a[1]);
+              const mostLikelyPos = sortedDist[0];
 
               return (
                 <div key={entry.team}>
-                  {/* Zone divider line */}
-                  {showBoundaryAbove && (
-                    <div
-                      className="h-px my-1 mx-0"
-                      style={{ backgroundColor: zone.hex, opacity: 0.25 }}
-                    />
+                  {/* Zone separator */}
+                  {showSeparatorAbove && (
+                    <div className="relative my-1 flex items-center" style={{ paddingLeft: "288px", paddingRight: "56px" }}>
+                      <div
+                        className="flex-1 h-px"
+                        style={{
+                          background: `linear-gradient(to right, transparent, ${zone.hex}60, transparent)`,
+                        }}
+                      />
+                    </div>
                   )}
 
                   <div
-                    className={`
-                      flex items-center rounded transition-all duration-200 cursor-pointer select-none
-                      ${isFlashing ? "animate-pulse" : ""}
-                      ${isHovered ? "bg-gray-800/80" : isLfc ? "bg-red-950/20" : "hover:bg-gray-900/60"}
-                    `}
+                    className={`flex items-center rounded-lg cursor-pointer select-none transition-all duration-200 ${isFlashing ? "animate-pulse" : ""}`}
                     style={{
-                      borderLeft: isLfc ? `3px solid ${zone.hex}` : "3px solid transparent",
-                      outline: isFlashing ? `1px solid ${zone.hex}44` : undefined,
+                      marginBottom: "1px",
+                      backgroundColor: isHovered
+                        ? "#0e1628"
+                        : isLfc
+                        ? "#0f0a0a"
+                        : "transparent",
+                      borderLeft: isLfc
+                        ? `3px solid ${zone.hex}`
+                        : isHovered
+                        ? `3px solid ${zone.hex}44`
+                        : "3px solid transparent",
+                      outline: isFlashing ? `1px solid ${zone.hex}55` : undefined,
                     }}
-                    onMouseEnter={() => setHovered(entry.team)}
+                    onMouseEnter={() => {
+                      setHovered(entry.team);
+                      if (clickedCell && clickedCell.team !== entry.team) setClickedCell(null);
+                    }}
                     onMouseLeave={() => setHovered(null)}
                   >
                     {/* Position number */}
                     <div
-                      className="w-9 text-center text-sm font-black flex-shrink-0 py-3"
-                      style={{ color: zone.hex }}
+                      className="w-10 flex-shrink-0 text-center font-black text-base py-4"
+                      style={{ color: zone.hex === "#1e2a3a" ? "#2a3f5c" : zone.hex }}
                     >
                       {entry.current_position}
                     </div>
 
                     {/* Team info */}
-                    <div className="w-44 flex-shrink-0 px-2 py-1.5">
-                      <div className={`text-sm font-semibold leading-tight ${isLfc ? "text-red-400" : "text-white"}`}>
+                    <div className="w-52 flex-shrink-0 px-3 py-3">
+                      <div
+                        className="font-bold text-sm leading-tight tracking-tight"
+                        style={{ color: isLfc ? "#f87171" : "#e8ecf4" }}
+                      >
                         {entry.team}
                         {entry.locked && (
                           <span
-                            className="ml-1.5 text-[9px] font-bold tracking-widest"
+                            className="ml-2 text-[9px] font-black tracking-widest uppercase"
                             style={{ color: zone.hex }}
                           >
                             SEALED
                           </span>
                         )}
                       </div>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        <span className="text-[10px] text-gray-500 font-mono">
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-[11px] font-mono font-semibold" style={{ color: "#4a6080" }}>
                           {entry.current_points}pts
                         </span>
-                        <span className="text-[10px] text-gray-600 font-mono">
-                          {entry.current_gd > 0 ? "+" : ""}{entry.current_gd}
+                        <span className="text-[10px] font-mono" style={{ color: "#2a3f5c" }}>
+                          {entry.current_gd > 0 ? "+" : ""}{entry.current_gd} GD
                         </span>
                       </div>
-                      {liveScore && (
-                        <div className="text-[9px] text-gray-500 mt-0.5 truncate leading-tight">
-                          {liveScore}
+                      {live && (
+                        <div
+                          className="text-[10px] mt-1 font-mono truncate"
+                          style={{
+                            color: live.status === "FT" ? "#4a6080" : live.status === "HT" ? "#6b8fa0" : "#e8ecf4",
+                          }}
+                        >
+                          {live.score}{" "}
+                          <span
+                            className="font-bold"
+                            style={{
+                              color:
+                                live.status === "FT"
+                                  ? "#4a6080"
+                                  : live.status === "HT"
+                                  ? "#f59e0b"
+                                  : "#22c55e",
+                            }}
+                          >
+                            {live.status}
+                          </span>
                         </div>
                       )}
                     </div>
 
-                    {/* ── Probability heat-map ── */}
-                    <div className="flex-1 relative h-12 py-2 pr-3">
-                      <div className="relative w-full h-full flex items-center">
+                    {/* ── Probability bar ── */}
+                    <div className="flex-1 relative h-14 pr-3 py-2">
+                      <div className="relative w-full h-full">
 
-                        {/* 20 position slots */}
-                        <div className="absolute inset-0 flex gap-[1px] items-stretch">
+                        {/* Background track */}
+                        <div
+                          className="absolute inset-0 rounded-md"
+                          style={{ backgroundColor: "#0a0f1e" }}
+                        />
+
+                        {/* 20 probability segments */}
+                        <div className="absolute inset-0 flex gap-[2px] p-[2px]">
                           {Array.from({ length: TOTAL_POSITIONS }, (_, i) => {
                             const pos = i + 1;
                             const prob = dist[String(pos)] ?? 0;
                             const opacity = probToOpacity(prob, maxProb);
                             const slotZone = zoneFor(pos);
                             const isCurrent = pos === entry.current_position;
-                            const isMostLikely = mostLikelyPos && Number(mostLikelyPos[0]) === pos;
+                            const isMostLikely = mostLikelyPos && Number(mostLikelyPos[0]) === pos && prob > 0.25;
+                            const midtableEmpty = slotZone.hex === "#1e2a3a" && prob === 0;
+                            const isClicked = clickedCell?.team === entry.team && clickedCell?.pos === pos;
+                            const hasScenarios = prob > 0 && entry.position_scenarios?.[String(pos)]?.length > 0;
 
                             return (
                               <div
                                 key={pos}
-                                className="flex-1 rounded-sm transition-all duration-700 relative"
+                                className="flex-1 rounded transition-all duration-700 relative"
                                 style={{
-                                  backgroundColor: slotZone.hex,
-                                  opacity: prob === 0 ? 0.04 : opacity,
-                                  transform: isCurrent ? "scaleY(1.25)" : "scaleY(1)",
-                                  boxShadow:
-                                    entry.locked && isCurrent
-                                      ? `0 0 10px 3px ${slotZone.hex}88`
-                                      : isMostLikely && prob > 0.3
-                                      ? `0 0 6px 1px ${slotZone.hex}44`
-                                      : undefined,
+                                  backgroundColor: midtableEmpty ? "#0d1425" : slotZone.hex,
+                                  opacity: prob === 0 ? (midtableEmpty ? 0.4 : 0.06) : opacity,
+                                  transform: isCurrent ? "scaleY(1.15)" : "scaleY(1)",
+                                  boxShadow: isClicked
+                                    ? `0 0 0 2px white, 0 0 12px 4px ${slotZone.hex}cc`
+                                    : entry.locked && isCurrent
+                                    ? `0 0 14px 4px ${slotZone.hex}99`
+                                    : isMostLikely
+                                    ? `0 0 8px 2px ${slotZone.hex}55`
+                                    : undefined,
+                                  cursor: hasScenarios ? "pointer" : "default",
+                                }}
+                                onClick={(e) => {
+                                  if (!hasScenarios) return;
+                                  e.stopPropagation();
+                                  setClickedCell(isClicked ? null : { team: entry.team, pos });
+                                  setRightTab("spread");
                                 }}
                               />
                             );
                           })}
                         </div>
 
-                        {/* Zone boundary lines overlaid on bar */}
-                        {ZONE_BOUNDARY_POSITIONS.map((pos) => (
+                        {/* Zone boundary lines */}
+                        {ZONE_BOUNDARY_AFTER.map((pos) => (
                           <div
                             key={pos}
                             className="absolute top-0 bottom-0 w-px z-10 pointer-events-none"
                             style={{
                               left: `${((pos - 0.5) / (TOTAL_POSITIONS - 1)) * 100}%`,
-                              backgroundColor: zoneFor(pos).hex,
-                              opacity: 0.3,
+                              background: `linear-gradient(to bottom, transparent, ${zoneFor(pos).hex}55, transparent)`,
                             }}
                           />
                         ))}
 
-                        {/* Current position dot */}
+                        {/* Current position marker */}
                         <div
-                          className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 z-20 transition-all duration-500 pointer-events-none"
+                          className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 z-20 pointer-events-none transition-all duration-500"
                           style={{ left: `${dotLeft}%` }}
                         >
                           <div
-                            className="w-3 h-3 rounded-full border-2 border-gray-950"
+                            className="rounded-full border-2 transition-all duration-500"
                             style={{
+                              width: isLfc ? "18px" : "14px",
+                              height: isLfc ? "18px" : "14px",
                               backgroundColor: zone.hex,
-                              boxShadow: `0 0 0 1px ${zone.hex}, 0 0 ${isLfc ? "8px" : "4px"} ${zone.hex}99`,
+                              borderColor: "#070b18",
+                              boxShadow: `0 0 0 1px ${zone.hex}88, 0 0 ${isLfc ? "16px" : "8px"} ${zone.hex}99`,
                             }}
                           />
                         </div>
+
                       </div>
                     </div>
 
-                    {/* Spread width pill */}
-                    <div className="w-12 text-center flex-shrink-0 pr-2">
+                    {/* Spread range */}
+                    <div className="w-14 text-center flex-shrink-0 pr-2">
                       {entry.locked ? (
-                        <span style={{ color: zone.hex }} className="text-lg leading-none">✓</span>
+                        <span className="text-xl font-bold leading-none" style={{ color: zone.hex }}>✓</span>
                       ) : (
-                        <span className="text-[10px] text-gray-600 font-mono">
+                        <span className="text-[10px] font-mono" style={{ color: "#2a4060" }}>
                           {entry.min_position}–{entry.max_position}
                         </span>
                       )}
@@ -417,24 +457,25 @@ export default function SpreadTable() {
               );
             })}
           </div>
-
-          <div className="h-16" /> {/* Breathing room above ticker */}
         </div>
 
-        {/* ── Right panel ─────────────────────────────────────────────── */}
-        <div className="w-64 flex-shrink-0 border-l border-gray-800 flex flex-col overflow-hidden">
+        {/* ── Right panel ──────────────────────────────────────────────── */}
+        <div
+          className="w-72 flex-shrink-0 flex flex-col overflow-hidden"
+          style={{ borderLeft: "1px solid #0f1929", backgroundColor: "#06090f" }}
+        >
 
           {/* Tab bar */}
-          <div className="flex border-b border-gray-800 flex-shrink-0">
+          <div className="flex flex-shrink-0" style={{ borderBottom: "1px solid #0f1929" }}>
             {(["spread", "fpl"] as const).map((tab) => (
               <button
                 key={tab}
                 onClick={() => setRightTab(tab)}
-                className={`flex-1 py-2 text-[11px] font-semibold uppercase tracking-wide transition ${
-                  rightTab === tab
-                    ? "text-white border-b-2 border-red-500"
-                    : "text-gray-600 hover:text-gray-400"
-                }`}
+                className="flex-1 py-3 text-[11px] font-bold uppercase tracking-widest transition"
+                style={{
+                  color: rightTab === tab ? "#e8ecf4" : "#2a4060",
+                  borderBottom: rightTab === tab ? "2px solid #dc2626" : "2px solid transparent",
+                }}
               >
                 {tab === "spread" ? "Spread" : "🏆 Brooklyn"}
               </button>
@@ -448,17 +489,25 @@ export default function SpreadTable() {
             </div>
           )}
 
-          {/* Spread tab — all three sections in one conditional */}
+          {/* Spread tab */}
           {rightTab === "spread" && (
             <>
-              <div className="flex-1 overflow-y-auto p-4 flex flex-col">
+              <div className="flex-1 overflow-y-auto p-5">
                 {hoveredEntry ? (
                   <div>
-                    <div className="font-bold text-base mb-0.5" style={{ color: zoneFor(hoveredEntry.current_position).hex }}>
+                    <div
+                      className="text-base font-black mb-0.5 tracking-tight"
+                      style={{ color: zoneFor(hoveredEntry.current_position).hex }}
+                    >
                       {hoveredEntry.team}
                     </div>
-                    <div className="text-[10px] text-gray-500 mb-3 uppercase tracking-wide">
-                      {hoveredEntry.locked ? "Position sealed" : `Spread: ${hoveredEntry.min_position}–${hoveredEntry.max_position}`}
+                    <div
+                      className="text-[10px] uppercase tracking-widest mb-4 font-semibold"
+                      style={{ color: "#2a4060" }}
+                    >
+                      {hoveredEntry.locked
+                        ? "Position sealed"
+                        : `Range: ${hoveredEntry.min_position}–${hoveredEntry.max_position}`}
                     </div>
 
                     {/* Histogram */}
@@ -469,34 +518,37 @@ export default function SpreadTable() {
                       const mostLikely = sorted[0];
                       return (
                         <>
-                          <div className="flex gap-[2px] h-16 items-end mb-2">
+                          <div className="flex gap-[2px] h-20 items-end mb-3 rounded-md overflow-hidden" style={{ backgroundColor: "#0a0f1e", padding: "4px" }}>
                             {Array.from({ length: TOTAL_POSITIONS }, (_, i) => {
                               const pos = i + 1;
                               const prob = dist[String(pos)] ?? 0;
-                              const h = prob === 0 ? 2 : 6 + (prob / maxP) * 94;
+                              const h = prob === 0 ? 3 : 8 + (prob / maxP) * 92;
                               const z = zoneFor(pos);
                               return (
                                 <div
                                   key={pos}
                                   title={`Pos ${pos}: ${(prob * 100).toFixed(1)}%`}
-                                  className="flex-1 rounded-t-sm transition-all duration-700"
+                                  className="flex-1 rounded-t transition-all duration-700"
                                   style={{
                                     height: `${h}%`,
                                     backgroundColor: z.hex,
-                                    opacity: prob === 0 ? 0.08 : 0.3 + 0.7 * (prob / maxP),
+                                    opacity: prob === 0 ? 0.06 : 0.25 + 0.75 * (prob / maxP),
                                   }}
                                 />
                               );
                             })}
                           </div>
                           {mostLikely && (
-                            <div className="text-xs mb-3">
-                              <span className="text-gray-400">Most likely: </span>
-                              <span className="font-bold" style={{ color: zoneFor(Number(mostLikely[0])).hex }}>
+                            <div className="text-sm mb-4 flex items-baseline gap-2">
+                              <span style={{ color: "#4a6080" }}>Most likely</span>
+                              <span
+                                className="font-black text-lg"
+                                style={{ color: zoneFor(Number(mostLikely[0])).hex }}
+                              >
                                 {mostLikely[0]}
                               </span>
-                              <span className="text-gray-500 text-[10px]">
-                                {" "}({(Number(mostLikely[1]) * 100).toFixed(1)}%)
+                              <span className="text-xs" style={{ color: "#4a6080" }}>
+                                {(Number(mostLikely[1]) * 100).toFixed(1)}%
                               </span>
                             </div>
                           )}
@@ -504,54 +556,123 @@ export default function SpreadTable() {
                       );
                     })()}
 
-                    <div className="space-y-2 text-xs border-t border-gray-800 pt-3">
-                      <div className="flex justify-between">
-                        <span className="text-gray-500">Best case</span>
-                        <span className="font-bold" style={{ color: zoneFor(hoveredEntry.min_position).hex }}>
-                          {hoveredEntry.min_position}
-                          {hoveredEntry.cl_certain ? " ✅" : hoveredEntry.cl_possible ? " (CL?)" : ""}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-500">Worst case</span>
-                        <span className="font-bold" style={{ color: zoneFor(hoveredEntry.max_position).hex }}>
-                          {hoveredEntry.max_position}
-                          {hoveredEntry.relegated_certain ? " 💀" : hoveredEntry.relegated_possible ? " (risk)" : ""}
-                        </span>
-                      </div>
-                    </div>
-
-                    {hoveredEntry.best_case.length > 0 && (
-                      <div className="mt-3 border-t border-gray-800 pt-3">
-                        <div className="text-[9px] text-green-500 uppercase tracking-wide mb-1">Best case needs</div>
-                        <div className="text-[10px] text-gray-400 leading-snug">{hoveredEntry.best_case.join(" · ")}</div>
-                      </div>
-                    )}
-                    {hoveredEntry.worst_case.length > 0 && (
-                      <div className="mt-2">
-                        <div className="text-[9px] text-red-500 uppercase tracking-wide mb-1">Worst case if</div>
-                        <div className="text-[10px] text-gray-400 leading-snug">{hoveredEntry.worst_case.join(" · ")}</div>
-                      </div>
+                    {/* Clicked-cell scenario drill-down */}
+                    {clickedCell && clickedCell.team === hoveredEntry.team ? (() => {
+                      const examples = hoveredEntry.position_scenarios?.[String(clickedCell.pos)] ?? [];
+                      const posZone = zoneFor(clickedCell.pos);
+                      return (
+                        <div className="mt-4" style={{ borderTop: "1px solid #0f1929", paddingTop: "12px" }}>
+                          <div className="flex items-center gap-2 mb-3">
+                            <div className="text-[9px] font-black uppercase tracking-widest" style={{ color: posZone.hex }}>
+                              How {hoveredEntry.team} finishes {clickedCell.pos}
+                            </div>
+                            <button
+                              className="text-[9px] ml-auto"
+                              style={{ color: "#2a4060" }}
+                              onClick={() => setClickedCell(null)}
+                            >✕</button>
+                          </div>
+                          {examples.length === 0 ? (
+                            <div className="text-[10px]" style={{ color: "#2a4060" }}>No scenarios available</div>
+                          ) : (
+                            <div className="space-y-2">
+                              {examples.map((combo, i) => (
+                                <div key={i} className="rounded p-2" style={{ backgroundColor: "#0a0f1e" }}>
+                                  <div className="text-[9px] font-black uppercase mb-1" style={{ color: "#2a4060" }}>
+                                    Scenario {i + 1}
+                                  </div>
+                                  <div className="flex flex-wrap gap-1">
+                                    {combo.map((result, j) => {
+                                      const isWin = result.endsWith(" W");
+                                      const isDraw = result.endsWith(" D");
+                                      return (
+                                        <span
+                                          key={j}
+                                          className="text-[10px] px-1.5 py-0.5 rounded font-mono"
+                                          style={{
+                                            backgroundColor: isWin ? "#16a34a22" : isDraw ? "#d4a50022" : "#dc262622",
+                                            color: isWin ? "#22c55e" : isDraw ? "#d4a500" : "#f87171",
+                                          }}
+                                        >
+                                          {result}
+                                        </span>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })() : (
+                      // Normal best/worst — hidden for sealed positions
+                      !hoveredEntry.locked && (
+                        <div className="space-y-2.5 text-sm pt-3" style={{ borderTop: "1px solid #0f1929" }}>
+                          <div className="flex justify-between items-center">
+                            <span style={{ color: "#4a6080" }}>Best case</span>
+                            <span className="font-black" style={{ color: zoneFor(hoveredEntry.min_position).hex }}>
+                              {hoveredEntry.min_position}
+                              {hoveredEntry.cl_certain ? " ✅" : hoveredEntry.cl_possible ? " (CL?)" : ""}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span style={{ color: "#4a6080" }}>Worst case</span>
+                            <span className="font-black" style={{ color: zoneFor(hoveredEntry.max_position).hex }}>
+                              {hoveredEntry.max_position}
+                              {hoveredEntry.relegated_certain ? " 💀" : hoveredEntry.relegated_possible ? " (risk)" : ""}
+                            </span>
+                          </div>
+                          {hoveredEntry.best_case.length > 0 && (
+                            <div className="mt-4" style={{ borderTop: "1px solid #0f1929", paddingTop: "12px" }}>
+                              <div className="text-[9px] font-black uppercase tracking-widest mb-1.5" style={{ color: "#16a34a" }}>
+                                Best case needs
+                              </div>
+                              <div className="text-[11px] leading-snug" style={{ color: "#4a6080" }}>
+                                {hoveredEntry.best_case.join(" · ")}
+                              </div>
+                            </div>
+                          )}
+                          {hoveredEntry.worst_case.length > 0 && (
+                            <div className="mt-3">
+                              <div className="text-[9px] font-black uppercase tracking-widest mb-1.5" style={{ color: "#dc2626" }}>
+                                Worst case if
+                              </div>
+                              <div className="text-[11px] leading-snug" style={{ color: "#4a6080" }}>
+                                {hoveredEntry.worst_case.join(" · ")}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )
                     )}
                   </div>
                 ) : (
-                  <div className="text-gray-700 text-xs text-center mt-12">
-                    Hover a team<br />to see their spread
+                  <div className="text-center mt-16">
+                    <div className="text-2xl mb-3">◎</div>
+                    <div className="text-[11px]" style={{ color: "#2a4060" }}>
+                      Hover a team<br />to see their spread
+                    </div>
                   </div>
                 )}
               </div>
 
               {/* Position change log */}
-              <div className="border-t border-gray-800 p-4 h-48 overflow-y-auto flex-shrink-0">
-                <div className="text-[9px] text-gray-600 uppercase tracking-widest mb-2">Live movement</div>
+              <div className="p-4 h-44 overflow-y-auto flex-shrink-0" style={{ borderTop: "1px solid #0f1929" }}>
+                <div className="text-[9px] font-black uppercase tracking-widest mb-2" style={{ color: "#1e3050" }}>
+                  Live movement
+                </div>
                 {posHistory.length === 0 ? (
-                  <div className="text-gray-700 text-[10px]">Waiting...</div>
+                  <div className="text-[10px]" style={{ color: "#1e3050" }}>Waiting for kick-off...</div>
                 ) : (
                   posHistory.map((h, i) => (
                     <div key={i} className="flex items-center justify-between text-[10px] py-0.5">
-                      <span className="text-gray-700 font-mono w-14">{h.time}</span>
-                      <span className="text-gray-400 flex-1 truncate">{h.team}</span>
-                      <span className={`font-bold ml-1 ${h.delta > 0 ? "text-green-500" : "text-red-500"}`}>
+                      <span className="font-mono w-14" style={{ color: "#1e3050" }}>{h.time}</span>
+                      <span className="flex-1 truncate" style={{ color: "#4a6080" }}>{h.team}</span>
+                      <span
+                        className="font-black ml-1"
+                        style={{ color: h.delta > 0 ? "#22c55e" : "#dc2626" }}
+                      >
                         {h.delta > 0 ? "▲" : "▼"}{Math.abs(h.delta)}
                       </span>
                     </div>
@@ -560,16 +681,18 @@ export default function SpreadTable() {
               </div>
 
               {/* Sealed positions */}
-              <div className="border-t border-gray-800 p-4 flex-shrink-0">
-                <div className="text-[9px] text-gray-600 uppercase tracking-widest mb-2">Positions sealed</div>
+              <div className="p-4 flex-shrink-0" style={{ borderTop: "1px solid #0f1929" }}>
+                <div className="text-[9px] font-black uppercase tracking-widest mb-2" style={{ color: "#1e3050" }}>
+                  Positions sealed
+                </div>
                 {spreads.filter((s) => s.locked).length === 0 ? (
-                  <div className="text-gray-700 text-[10px]">None yet</div>
+                  <div className="text-[10px]" style={{ color: "#1e3050" }}>None yet</div>
                 ) : (
-                  <div className="space-y-0.5">
+                  <div className="space-y-1">
                     {spreads.filter((s) => s.locked).map((s) => (
                       <div key={s.team} className="flex justify-between text-[11px]">
-                        <span className="text-gray-300">{s.team}</span>
-                        <span className="font-bold" style={{ color: zoneFor(s.current_position).hex }}>
+                        <span style={{ color: "#6b8fa0" }}>{s.team}</span>
+                        <span className="font-black" style={{ color: zoneFor(s.current_position).hex }}>
                           {s.current_position}
                         </span>
                       </div>
@@ -582,30 +705,39 @@ export default function SpreadTable() {
         </div>
       </div>
 
-      {/* ── Commentary ticker ────────────────────────────────────────── */}
+      {/* ── Commentary ticker ────────────────────────────────────────────── */}
       {speakText && (
-        <div className="border-t border-gray-800 bg-gray-900/80 px-4 py-2 flex-shrink-0 flex items-center gap-3">
-          <div className="text-[9px] text-red-500 uppercase tracking-widest flex-shrink-0 font-bold">
+        <div
+          className="flex-shrink-0 flex items-center gap-4 px-6 py-2.5"
+          style={{ borderTop: "1px solid #0f1929", backgroundColor: "#04070e" }}
+        >
+          <div className="text-[9px] font-black uppercase tracking-widest flex-shrink-0" style={{ color: "#dc2626" }}>
             LIVE
           </div>
-          <div className="text-xs text-gray-300 truncate italic flex-1">{speakText}</div>
+          <div className="text-xs italic flex-1 truncate" style={{ color: "#6b8fa0" }}>{speakText}</div>
         </div>
       )}
 
-      {/* ── Floating talking head ─────────────────────────────────────── */}
+      {/* ── Floating talking head ─────────────────────────────────────────── */}
       <div
-        className={`
-          fixed bottom-6 right-6 z-50
-          flex flex-col items-center gap-2
-          transition-all duration-300
-          ${speaking ? "opacity-100 scale-100" : "opacity-40 scale-90 hover:opacity-70"}
-        `}
+        className={`fixed bottom-6 right-6 z-50 flex flex-col items-center gap-2 transition-all duration-300 ${
+          speaking ? "opacity-100 scale-100" : "opacity-30 scale-90 hover:opacity-60"
+        }`}
       >
-        {/* Speech bubble */}
         {speaking && speakText && (
-          <div className="bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 max-w-[220px] text-[11px] text-gray-200 leading-snug shadow-2xl relative">
+          <div
+            className="rounded-xl px-3 py-2 max-w-[220px] text-[11px] leading-snug shadow-2xl relative"
+            style={{
+              backgroundColor: "#0e1628",
+              border: "1px solid #1e3050",
+              color: "#a0b8d0",
+            }}
+          >
             {speakText.length > 120 ? speakText.slice(0, 117) + "…" : speakText}
-            <div className="absolute -bottom-2 right-8 w-3 h-3 bg-gray-900 border-r border-b border-gray-700 rotate-45" />
+            <div
+              className="absolute -bottom-2 right-8 w-3 h-3 rotate-45"
+              style={{ backgroundColor: "#0e1628", borderRight: "1px solid #1e3050", borderBottom: "1px solid #1e3050" }}
+            />
           </div>
         )}
         <TalkingHead
