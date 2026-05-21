@@ -7,9 +7,11 @@ before kick-off, plus an overall "day at a glance" summary.
 from config import PRE_MATCH_STANDINGS, MATCHWEEK_38_FIXTURE_IDS, GOLDEN_BOOT_RACE, RELEGATION_ZONE_TEAMS
 
 
-# Aston Villa won the 2025-26 Europa League — opens a 6th CL spot for the PL.
+# Villa won the Europa League. 6th place gets CL ONLY if Villa finish 5th.
+# If Villa finish 4th or higher, the EL win is absorbed — top 5 get CL as normal.
 EUROPEAN_SPOTS = {
-    "champions_league": 6,
+    "champions_league": 5,        # guaranteed
+    "champions_league_6th_if_villa_5th": 6,  # conditional
     "europa_league": 8,
     "conference_league_qualifier": 9,
 }
@@ -73,12 +75,17 @@ def _classify_stakes(home: str, away: str, standings: dict) -> list[str]:
                 stakes.append(f"{team} IN THE RELEGATION ZONE (pos {pos}) — must win")
         elif pos == 17:
             stakes.append(f"{team} one place above the drop — danger")
-        elif pos <= 6:
+        elif pos <= 5:
             if locked:
                 zone = "Champions" if pos == 1 else "Champions League"
                 stakes.append(f"{team} locked into {pos}{_ordinal(pos)} — {zone} confirmed")
             else:
                 stakes.append(f"{team} in Champions League contention (currently {pos})")
+        elif pos == 6:
+            if locked:
+                stakes.append(f"{team} locked into 6th — Champions League IF Villa finish 5th, Europa League if not")
+            else:
+                stakes.append(f"{team} in 6th — Champions League possible if Villa drop to 5th")
         elif pos <= 8:
             if locked:
                 stakes.append(f"{team} locked into {pos}{_ordinal(pos)} — Europa League confirmed")
@@ -148,7 +155,7 @@ def build_full_preview(standings: dict, golden_boot: dict, spreads: dict | None 
     ]
 
     # Build the "day at a glance" summary
-    cl_contenders = [t for t, d in standings.items() if d.get("position", 99) <= 7]
+    cl_contenders = [t for t, d in standings.items() if d.get("position", 99) <= 6]
     relegation_threatened = [t for t in RELEGATION_ZONE_TEAMS]
 
     boot_leader = max(golden_boot.items(), key=lambda x: x[1]["goals"], default=(None, {}))

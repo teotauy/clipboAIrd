@@ -47,23 +47,24 @@ interface DelphiPayload {
 
 // ─── ZONES ────────────────────────────────────────────────────────────────────
 
-// Aston Villa won the Europa League on 2026-05-21 — this opens a 6th PL CL spot.
-// PL positions 1–6 now qualify for the Champions League.
+// Villa won the Europa League — 6th place gets CL ONLY IF Villa finish 5th.
+// If Villa finish 4th or higher, their EL win is absorbed and 6th = EL as normal.
 const ZONES = [
-  { from: 1,  to: 1,  label: "Champions",   short: "PL",   color: "#d4a500", hex: "#d4a500" },
-  { from: 2,  to: 6,  label: "Champ. Lg.",  short: "CL",   color: "#2563eb", hex: "#2563eb" },
-  { from: 7,  to: 8,  label: "Europa Lg.",  short: "EL",   color: "#ea6c1a", hex: "#ea6c1a" },
-  { from: 9,  to: 9,  label: "Conference",  short: "UECL", color: "#16a34a", hex: "#16a34a" },
-  { from: 10, to: 17, label: "",            short: "",     color: "#1e2a3a", hex: "#1e2a3a" },
-  { from: 18, to: 20, label: "Relegation",  short: "REL",  color: "#dc2626", hex: "#dc2626" },
+  { from: 1,  to: 1,  label: "Champions",       short: "PL",   color: "#d4a500", hex: "#d4a500" },
+  { from: 2,  to: 5,  label: "Champ. Lg.",       short: "CL",   color: "#2563eb", hex: "#2563eb" },
+  { from: 6,  to: 6,  label: "CL if Villa 5th", short: "CL?",  color: "#7c3aed", hex: "#7c3aed" },
+  { from: 7,  to: 8,  label: "Europa Lg.",       short: "EL",   color: "#ea6c1a", hex: "#ea6c1a" },
+  { from: 9,  to: 9,  label: "Conference",       short: "UECL", color: "#16a34a", hex: "#16a34a" },
+  { from: 10, to: 17, label: "",                 short: "",     color: "#1e2a3a", hex: "#1e2a3a" },
+  { from: 18, to: 20, label: "Relegation",       short: "REL",  color: "#dc2626", hex: "#dc2626" },
 ];
 
 function zoneFor(pos: number) {
-  return ZONES.find((z) => pos >= z.from && pos <= z.to) ?? ZONES[4];
+  return ZONES.find((z) => pos >= z.from && pos <= z.to) ?? ZONES[5];
 }
 
 // Positions after which a separator line is drawn
-const ZONE_BOUNDARY_AFTER = [1, 6, 8, 9, 17];
+const ZONE_BOUNDARY_AFTER = [1, 5, 6, 8, 9, 17];
 
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
 
@@ -263,7 +264,7 @@ export default function SpreadTable() {
           {/* Position axis header */}
           <div className="flex mb-2" style={{ paddingLeft: "288px", paddingRight: "56px" }}>
             <div className="flex-1 relative h-5">
-              {[1, 6, 7, 8, 9, 10, 14, 17, 18, 20].map((pos) => {
+              {[1, 5, 6, 7, 8, 9, 10, 14, 17, 18, 20].map((pos) => {
                 const z = zoneFor(pos);
                 return (
                   <span
