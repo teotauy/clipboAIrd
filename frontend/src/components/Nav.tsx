@@ -16,8 +16,8 @@ export default function Nav() {
 
   return (
     <nav className="flex items-center gap-1 px-4 py-2 bg-gray-950 border-b border-gray-800 flex-shrink-0">
-      <span className="text-red-500 font-black tracking-tight text-sm mr-4 flex-shrink-0">
-        ANFIELD ORACLE
+      <span className="text-red-500 font-bold mr-4 flex-shrink-0" style={{ fontSize: "15px", letterSpacing: "-0.01em" }}>
+        Anfield Oracle
       </span>
       <div className="flex items-center gap-1 overflow-x-auto">
         {LINKS.map(({ href, label }) => {

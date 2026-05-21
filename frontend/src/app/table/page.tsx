@@ -234,7 +234,7 @@ export default function SpreadTable() {
 
           {/* Zone color bars header */}
           <div className="flex mb-0.5" style={{ paddingLeft: "288px", paddingRight: "56px" }}>
-            <div className="flex-1 flex h-5 rounded overflow-hidden gap-px">
+            <div className="flex-1 flex h-5 rounded overflow-hidden gap-px" style={{ filter: "url(#sketchy)" }}>
               {ZONES.map((z) => {
                 const width = ((z.to - z.from + 1) / TOTAL_POSITIONS) * 100;
                 return (
@@ -402,7 +402,7 @@ export default function SpreadTable() {
                         />
 
                         {/* 20 probability segments */}
-                        <div className="absolute inset-0 flex gap-[2px] p-[2px]">
+                        <div className="absolute inset-0 flex gap-[2px] p-[2px]" style={{ filter: "url(#sketchy)" }}>
                           {Array.from({ length: TOTAL_POSITIONS }, (_, i) => {
                             const pos = i + 1;
                             const prob = dist[String(pos)] ?? 0;

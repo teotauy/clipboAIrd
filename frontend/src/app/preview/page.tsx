@@ -86,8 +86,14 @@ function Section({ title, subtitle, children }: {
   return (
     <section className="max-w-5xl mx-auto px-4 py-10 border-t border-gray-800/60">
       <div className="mb-6">
-        <h2 className="text-2xl font-black text-white tracking-tight">{title}</h2>
-        {subtitle && <p className="text-gray-500 text-sm mt-1">{subtitle}</p>}
+        <h2 className="text-2xl font-bold text-white" style={{ fontFamily: "var(--font-kalam), cursive" }}>
+          {title}
+        </h2>
+        {subtitle && (
+          <p className="text-gray-500 text-sm mt-1" style={{ fontFamily: "var(--font-kalam), cursive" }}>
+            {subtitle}
+          </p>
+        )}
       </div>
       {children}
     </section>

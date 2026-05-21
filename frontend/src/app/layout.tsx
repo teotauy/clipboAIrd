@@ -1,15 +1,19 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Kalam, Share_Tech_Mono } from "next/font/google";
 import "./globals.css";
 import Nav from "@/components/Nav";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+// Handwriting body font — legible but looks hand-lettered
+const kalam = Kalam({
+  weight: ["300", "400", "700"],
+  variable: "--font-kalam",
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+// Mono for numbers/scores — keeps data crisp
+const shareTechMono = Share_Tech_Mono({
+  weight: "400",
+  variable: "--font-mono",
   subsets: ["latin"],
 });
 
@@ -26,9 +30,22 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${kalam.variable} ${shareTechMono.variable} h-full`}
     >
       <body className="min-h-full flex flex-col">
+        {/* SVG filter for sketchy/rough border effect — applied via CSS */}
+        <svg width="0" height="0" style={{ position: "absolute" }}>
+          <defs>
+            <filter id="sketchy">
+              <feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="3" result="noise" seed="2" />
+              <feDisplacementMap in="SourceGraphic" in2="noise" scale="3" xChannelSelector="R" yChannelSelector="G" />
+            </filter>
+            <filter id="sketchy-strong">
+              <feTurbulence type="fractalNoise" baseFrequency="0.025" numOctaves="4" result="noise" seed="5" />
+              <feDisplacementMap in="SourceGraphic" in2="noise" scale="5" xChannelSelector="R" yChannelSelector="G" />
+            </filter>
+          </defs>
+        </svg>
         <Nav />
         {children}
       </body>
