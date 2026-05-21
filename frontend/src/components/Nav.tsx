@@ -4,11 +4,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const LINKS = [
-  { href: "/table",             label: "Spread Table" },
-  { href: "/preview",           label: "Preview" },
-  { href: "/recap",             label: "Recap" },
-  { href: "/chaos",             label: "Chaos Index" },
-  { href: "/DelphiDigitalDouble", label: "Delphi" },
+  { href: "/table",   label: "Spread Table" },
+  { href: "/preview", label: "Preview" },
+  { href: "/recap",   label: "Recap" },
+  { href: "/chaos",   label: "Chaos Index" },
+  // Delphi hidden until webhook + prompts are configured
 ];
 
 export default function Nav() {
