@@ -1,8 +1,11 @@
 "use client";
 
 import { useEffect, useState, useRef, useCallback } from "react";
+import dynamic from "next/dynamic";
 import FPLPanel from "@/components/FPLPanel";
 import Soundboard from "@/components/Soundboard";
+
+const StadiumMap = dynamic(() => import("@/components/StadiumMap"), { ssr: false });
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
 const TOTAL_POSITIONS = 20;
@@ -356,6 +359,7 @@ export default function OraclePage() {
   const navLinks = [
     { href: "#preview",    label: "Preview",      show: true },
     { href: "#soundboard", label: "Soundboard",   show: true },
+    { href: "#map",        label: "Match Map",    show: true },
     { href: "#table",      label: "Spread Table", show: spreads.length > 0 },
     { href: "#chaos",      label: "Chaos Index",  show: true },
     { href: "#recap",      label: "Recap",        show: !!recapData?.finished },
@@ -621,6 +625,19 @@ export default function OraclePage() {
       ══════════════════════════════════════════════════════════════════════ */}
       <Section id="soundboard" title="Colby's Soundboard" accent="the things you always say">
         <Soundboard />
+      </Section>
+
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          MATCH MAP
+      ══════════════════════════════════════════════════════════════════════ */}
+      <Section id="map" title="Match Map" accent="10 games, 1 moment — the threads that connect them">
+        <Reveal>
+          <StadiumMap liveScores={liveScores} spreads={spreads} flashingTeams={flashingTeams} />
+          <p className="mt-3 text-xs text-center" style={{ color: "#2a4060" }}>
+            Dashed threads connect clubs straddling the same zone boundary. Pins glow on goal events.
+          </p>
+        </Reveal>
       </Section>
 
 

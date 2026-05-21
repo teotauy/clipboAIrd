@@ -1,6 +1,21 @@
 @import "tailwindcss";
+@import "leaflet/dist/leaflet.css";
 
 html { scroll-behavior: smooth; }
+
+/* ─── LEAFLET CUSTOM TOOLTIP ───────────────────────────────────────────────── */
+.stadium-tooltip {
+  background: #0a0f1e !important;
+  border: 1px solid #1e2a3a !important;
+  border-radius: 8px !important;
+  color: #e8ecf4 !important;
+  font-family: var(--font-nunito), sans-serif;
+  font-size: 12px;
+  padding: 8px 12px !important;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.6) !important;
+}
+.stadium-tooltip::before { display: none !important; }
+.leaflet-tooltip-top.stadium-tooltip::before { display: none !important; }
 
 /* ─── HAND-DRAWN THEME ──────────────────────────────────────────────────────
    Inspired by hand-drawn infographic style:
