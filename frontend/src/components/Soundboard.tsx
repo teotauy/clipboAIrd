@@ -25,9 +25,12 @@ const PHRASES = [
   { label: "No no NO",          text: "No. No. NO!",                          emoji: "🙈", tier: "pain"    },
 
   // Ref rage
-  { label: "REFEREE!",          text: "REFEREE! Come on! How is that not a foul?!", emoji: "📣", tier: "ref" },
-  { label: "That's offside",    text: "That is OFFSIDE! Are you blind?!",     emoji: "🚩", tier: "ref"     },
-  { label: "Scandal",           text: "It's a scandal. An absolute scandal.", emoji: "🤬", tier: "ref"     },
+  { label: "REFEREE!",              text: "REFEREE! Come on! How is that not a foul?!",                         emoji: "📣", tier: "ref" },
+  { label: "That's offside",        text: "That is OFFSIDE! Are you blind?!",                                   emoji: "🚩", tier: "ref" },
+  { label: "Straight red",          text: "Straight red! That is a straight red! How has he not gone off?!",    emoji: "🟥", tier: "ref" },
+  { label: "That's a black card",   text: "That's a black card! That is absolutely a black card!",              emoji: "🖤", tier: "ref" },
+  { label: "Dinner reservations",   text: "That's all the extra time you're adding? Do you have dinner reservations?", emoji: "🍽️", tier: "ref" },
+  { label: "Scandal",               text: "It's a scandal. An absolute scandal.",                               emoji: "🤬", tier: "ref" },
 
   // Pub classics
   { label: "YNWA",                  text: "You'll Never Walk Alone.",                                         emoji: "🎵", tier: "classic" },
