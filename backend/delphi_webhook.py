@@ -84,24 +84,22 @@ def _generate_narrative_summary(state: dict) -> str:
     sentiment = state["anfield_sentiment"]
 
     if top4["liverpool_in_cl"]:
-        lfc_status = f"Liverpool IN the top 4 (position {top4['liverpool_position']})"
+        lfc_status = f"Liverpool in {top4['liverpool_position']}th. Holding on."
     else:
-        lfc_status = f"Liverpool OUTSIDE top 4 (position {top4['liverpool_position']}, {top4['gap_to_fourth']} pts behind 4th)"
+        gap = top4['gap_to_fourth']
+        pos = top4['liverpool_position']
+        lfc_status = f"Liverpool in {pos}th, {gap} point{'s' if gap != 1 else ''} off fourth."
 
     if sentiment > 0.5:
-        mood = "Anfield is BOUNCING"
+        mood = "This could actually happen."
     elif sentiment > 0:
-        mood = "Cautious optimism on the Kop"
+        mood = "Don't get comfortable."
     elif sentiment > -0.5:
-        mood = "Nervous energy — fingers in ears"
+        mood = "Not where we need to be."
     else:
-        mood = "Absolute dread. The walls are closing in"
+        mood = "This is bad."
 
-    golden_boot = state["golden_boot"]
-    gb_leader = golden_boot[0] if golden_boot else None
-    gb_str = f"{gb_leader['player']} leads Golden Boot ({gb_leader['goals']})" if gb_leader else ""
-
-    return f"{lfc_status}. {mood}. {gb_str}"
+    return f"{lfc_status} {mood}"
 
 
 async def push_to_delphi(payload: dict):
