@@ -65,7 +65,7 @@ HISTORY_ON_THE_LINE = [
         "team": "Aston Villa",
         "headline": "Europa League champions — and still alive for more",
         "body": (
-            "Aston Villa won the Europa League on Thursday. But the drama isn't over: "
+            "Aston Villa won the Europa League on Wednesday. But the drama isn't over: "
             "if they slip from 4th to 5th today, they cascade the extra CL spot down "
             "to 6th place. Either way, Villa are in the Champions League next season. "
             "First European title since their 1982 European Cup."
