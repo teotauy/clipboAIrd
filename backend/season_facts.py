@@ -207,9 +207,9 @@ WILD_FACTS = [
         "icon": "🏆",
     },
     {
-        "stat": "3",
-        "label": "relegation battles still live",
-        "detail": "Burnley and Wolves are down. But Tottenham (38pts) and West Ham (36pts) are not safe yet.",
+        "stat": "1",
+        "label": "relegation battle still live",
+        "detail": "Burnley and Wolves are already down. But West Ham (36pts) can still leapfrog Tottenham (38pts) if results go wrong.",
         "icon": "💀",
     },
     {
