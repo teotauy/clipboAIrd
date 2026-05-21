@@ -158,10 +158,20 @@ VERIFIED_GOLDEN_BOOT = [
     {"player": "Danny Welbeck",         "team": "Brighton",          "goals": 13},
 ]
 
-# ─── GOLDEN GLOVES RACE ──────────────────────────────────────────────────────
-# Loaded from season_state.json (written by stage_setup.py via API-Football)
+# ─── GOLDEN GLOVES — verified from premierleague.com before MW38 ─────────────
 
-from config import GOLDEN_GLOVES_RACE
+GOLDEN_GLOVES_RACE = [
+    {"keeper": "David Raya",            "team": "Arsenal",         "clean_sheets": 19},
+    {"keeper": "Gianluigi Donnarumma",  "team": "Manchester City", "clean_sheets": 15},
+    {"keeper": "Djordje Petrovic",      "team": "Bournemouth",     "clean_sheets": 11},
+    {"keeper": "Dean Henderson",        "team": "Crystal Palace",  "clean_sheets": 11},
+    {"keeper": "Jordan Pickford",       "team": "Everton",         "clean_sheets": 11},
+    {"keeper": "Robin Roefs",           "team": "Sunderland",      "clean_sheets": 10},
+    {"keeper": "Bart Verbruggen",       "team": "Brighton",        "clean_sheets": 10},
+    {"keeper": "Caoimhín Kelleher",     "team": "Brentford",       "clean_sheets": 10},
+    {"keeper": "Robert Sánchez",        "team": "Chelsea",         "clean_sheets": 9},
+    {"keeper": "Bernd Leno",            "team": "Fulham",          "clean_sheets": 8},
+]
 
 # ─── WILD FACTS ──────────────────────────────────────────────────────────────
 
