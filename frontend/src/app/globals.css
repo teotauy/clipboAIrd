@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+html { scroll-behavior: smooth; }
+
 /* ─── HAND-DRAWN THEME ──────────────────────────────────────────────────────
    Inspired by hand-drawn infographic style:
    dot-grid paper background, handwriting font, marker-like colors,

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Kalam, Nunito, Share_Tech_Mono } from "next/font/google";
 import "./globals.css";
-import Nav from "@/components/Nav";
 
 // Handwriting font — headings, nav, labels, display text only
 const kalam = Kalam({
@@ -53,7 +52,6 @@ export default function RootLayout({
             </filter>
           </defs>
         </svg>
-        <Nav />
         {children}
       </body>
     </html>
