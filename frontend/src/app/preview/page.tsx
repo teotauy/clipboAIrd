@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Soundboard from "@/components/Soundboard";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
 
@@ -163,6 +164,11 @@ export default function PreviewPage() {
           )}
         </div>
       </div>
+
+      {/* ── SOUNDBOARD ───────────────────────────────────────────────────── */}
+      <Section title="Colby's Soundboard" subtitle="The things you always say. Now one click away.">
+        <Soundboard />
+      </Section>
 
       {/* ── WILD FACTS / NUMBERS BAR ─────────────────────────────────────── */}
       {facts && (
