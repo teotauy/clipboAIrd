@@ -129,61 +129,26 @@ EUROPEAN_PEDIGREE = [
 ]
 
 # ─── MW38 FIXTURE CURIOSITIES ────────────────────────────────────────────────
-# Fun historical notes about each fixture
+# Populate with VERIFIED facts only — do NOT guess head-to-head records or
+# recent form stats. Stakes-based notes derived from standings are safe.
 
-FIXTURE_LORE = {
-    "Liverpool vs Brentford": {
-        "note": "Brentford have never won at Anfield in the Premier League era.",
-        "series": "Liverpool have won their last 4 home league games against Brentford.",
-    },
-    "Crystal Palace vs Arsenal": {
-        "note": "Arsenal have not lost a league game on the final day of the season since 2003.",
-        "series": "This fixture carries relegation weight too — Palace are 15th, needing points to stay clear.",
-    },
-    "Manchester City vs Aston Villa": {
-        "note": "The reverse fixture this season ended 1–1. Villa beat City 1–0 at Villa Park last season.",
-        "series": "City have won 8 of their last 10 home league games against Villa.",
-    },
-    "Brighton vs Manchester United": {
-        "note": "Brighton beat Man United 3–1 at the Amex last season. United's away form has been wretched.",
-        "series": "Brighton are unbeaten in their last 3 home matches against United.",
-    },
-    "Sunderland vs Chelsea": {
-        "note": "Sunderland's last win over Chelsea in the top flight was in 2014.",
-        "series": "Chelsea have won 6 of the last 8 meetings between these sides.",
-    },
+FIXTURE_LORE: dict[str, dict] = {
     "Nottingham Forest vs Bournemouth": {
-        "note": "This is effectively a 5th-place shootout. Both clubs need a result.",
-        "series": "Forest have lost only 2 home league games all season.",
-    },
-    "Fulham vs Newcastle": {
-        "note": "Fulham and Newcastle have been closely matched all season — both sitting mid-table.",
-        "series": "The reverse fixture ended 1–1 at St. James' Park.",
-    },
-    "Tottenham vs Everton": {
-        "note": "Tottenham haven't won a league game at home since February.",
-        "series": "Everton are winless in their last 6 away matches.",
-    },
-    "West Ham vs Leeds": {
-        "note": "Leeds are fighting to avoid the drop. West Ham have nothing left to play for.",
-        "series": "Leeds' survival fight makes this a must-win — but they've won only 2 away games all season.",
+        "note": "Effectively a 5th-place shootout — both clubs are fighting for the same European spot.",
+        "series": "",
     },
     "Burnley vs Wolves": {
-        "note": "Two relegated clubs with nothing left to settle except pride and bonuses.",
-        "series": "Both sides are already down — this is the last rites.",
+        "note": "Both sides are already relegated. Pride and end-of-season bonuses on the line.",
+        "series": "",
     },
 }
 
 # ─── GOLDEN GLOVES RACE ──────────────────────────────────────────────────────
-# Top clean sheet keepers — manual data since we don't poll this from the API
+# Populate this manually with real MW37 data before match day.
+# Do NOT guess — wrong stats embarrass the product.
+# Format: {"keeper": "Name", "team": "Team", "clean_sheets": N}
 
-GOLDEN_GLOVES_RACE = [
-    {"keeper": "David Raya",        "team": "Arsenal",           "clean_sheets": 17},
-    {"keeper": "Alisson Becker",    "team": "Liverpool",         "clean_sheets": 14},
-    {"keeper": "Ederson",           "team": "Manchester City",   "clean_sheets": 13},
-    {"keeper": "Neto",              "team": "Bournemouth",       "clean_sheets": 11},
-    {"keeper": "Robert Sánchez",    "team": "Chelsea",           "clean_sheets": 10},
-]
+GOLDEN_GLOVES_RACE: list[dict] = []
 
 # ─── WILD FACTS ──────────────────────────────────────────────────────────────
 
