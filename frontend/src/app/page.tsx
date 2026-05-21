@@ -165,6 +165,24 @@ function StatBar({
   );
 }
 
+// ─── STAT BAR LIST (needs its own component to call useInView legally) ───────
+
+function StatBarList({ items, color }: {
+  items: { rank: number; name: string; sub: string; value: number }[];
+  color: string;
+}) {
+  const { ref, inView } = useInView();
+  const max = items[0]?.value ?? 1;
+  return (
+    <div ref={ref}>
+      {items.map((item, i) => (
+        <StatBar key={item.name} rank={item.rank} name={item.name} sub={item.sub}
+          value={item.value} maxValue={max} color={color} inView={inView} delay={i * 0.07} />
+      ))}
+    </div>
+  );
+}
+
 // ─── SECTION WRAPPER ─────────────────────────────────────────────────────────
 
 function Section({ id, title, accent, children }: {
@@ -449,18 +467,7 @@ export default function OraclePage() {
               <Reveal delay={0.1}>
                 <div className="rounded-xl p-5 h-full" style={{ background: "#080c14", border: "1px solid #2a2010" }}>
                   <div className="text-xs text-yellow-400 uppercase tracking-widest mb-4 font-bold">👟 Golden Boot</div>
-                  {(() => {
-                    const { ref, inView } = useInView();
-                    return (
-                      <div ref={ref}>
-                        {goldenBoot.map((entry, i) => (
-                          <StatBar key={entry.player} rank={i + 1} name={entry.player}
-                            sub={entry.team} value={entry.goals} maxValue={bootMax}
-                            color="#d4a500" inView={inView} delay={i * 0.08} />
-                        ))}
-                      </div>
-                    );
-                  })()}
+                  <StatBarList items={goldenBoot.map((e, i) => ({ rank: i + 1, name: e.player, sub: e.team, value: e.goals }))} color="#d4a500" />
                 </div>
               </Reveal>
 
@@ -492,18 +499,7 @@ export default function OraclePage() {
                       <span className="text-xl">👟</span>
                       <span className="text-sm font-bold text-yellow-400 uppercase tracking-widest">Golden Boot</span>
                     </div>
-                    {(() => {
-                      const { ref, inView } = useInView();
-                      return (
-                        <div ref={ref}>
-                          {goldenBoot.map((entry, i) => (
-                            <StatBar key={entry.player} rank={i + 1} name={entry.player}
-                              sub={entry.team} value={entry.goals} maxValue={bootMax}
-                              color="#d4a500" inView={inView} delay={i * 0.07} />
-                          ))}
-                        </div>
-                      );
-                    })()}
+                    <StatBarList items={goldenBoot.map((e, i) => ({ rank: i + 1, name: e.player, sub: e.team, value: e.goals }))} color="#d4a500" />
                   </div>
                 </Reveal>
               )}
@@ -515,18 +511,7 @@ export default function OraclePage() {
                       <span className="text-xl">🧤</span>
                       <span className="text-sm font-bold text-green-400 uppercase tracking-widest">Golden Gloves</span>
                     </div>
-                    {(() => {
-                      const { ref, inView } = useInView();
-                      return (
-                        <div ref={ref}>
-                          {goldenGloves.map((g, i) => (
-                            <StatBar key={g.keeper} rank={i + 1} name={g.keeper}
-                              sub={g.team} value={g.clean_sheets} maxValue={glovesMax}
-                              color="#22c55e" inView={inView} delay={i * 0.07} />
-                          ))}
-                        </div>
-                      );
-                    })()}
+                    <StatBarList items={goldenGloves.map((g, i) => ({ rank: i + 1, name: g.keeper, sub: g.team, value: g.clean_sheets }))} color="#22c55e" />
                   </div>
                 </Reveal>
               )}
