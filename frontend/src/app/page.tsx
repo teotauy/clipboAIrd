@@ -357,7 +357,7 @@ export default function OraclePage() {
     { href: "#preview",    label: "Preview",      show: true },
     { href: "#soundboard", label: "Soundboard",   show: true },
     { href: "#table",      label: "Spread Table", show: spreads.length > 0 },
-    { href: "#chaos",      label: "Chaos Index",  show: !!chaosData && !chaosLoading },
+    { href: "#chaos",      label: "Chaos Index",  show: true },
     { href: "#recap",      label: "Recap",        show: !!recapData?.finished },
   ];
 
