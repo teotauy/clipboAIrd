@@ -69,17 +69,32 @@ export default function RecapPage() {
 
   if (!data.finished) {
     return (
-      <main className="min-h-screen bg-gray-950 text-white flex items-center justify-center flex-col gap-4">
-        <div className="text-2xl font-bold text-gray-400">Matches still in progress</div>
-        <div className="text-gray-600 text-sm">This page updates automatically at full time</div>
-        <div className="flex gap-1 mt-2">
-          {[0, 1, 2].map((i) => (
-            <span
-              key={i}
-              className="w-2 h-2 rounded-full bg-red-500 animate-bounce"
-              style={{ animationDelay: `${i * 0.2}s` }}
-            />
-          ))}
+      <main className="min-h-screen bg-gray-950 text-white flex items-center justify-center p-6">
+        <div className="max-w-md text-center space-y-6">
+          <div className="text-xs text-gray-600 uppercase tracking-widest">After the final whistle</div>
+          <h1 className="text-3xl font-black text-red-500">FINAL RECKONING</h1>
+          <p className="text-gray-400 text-sm leading-relaxed">
+            When all 10 matches hit full time on Sunday, this page auto-generates
+            the complete season story — final table, confirmed European spots,
+            relegated clubs, Golden Boot winner, biggest result of the day,
+            and a Liverpool narrative for the ages.
+          </p>
+          <p className="text-gray-600 text-xs leading-relaxed">
+            Brooklyn OLSC fantasy league results land here too — GW38 winner,
+            season champion, and the full standings.
+          </p>
+          <div className="pt-2 border-t border-gray-800 text-gray-600 text-xs">
+            Come back at full time. It'll be worth it.
+          </div>
+          <div className="flex gap-1 justify-center pt-1">
+            {[0, 1, 2].map((i) => (
+              <span
+                key={i}
+                className="w-1.5 h-1.5 rounded-full bg-red-800 animate-bounce"
+                style={{ animationDelay: `${i * 0.2}s` }}
+              />
+            ))}
+          </div>
         </div>
       </main>
     );
