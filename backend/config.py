@@ -54,6 +54,7 @@ PRE_MATCH_STANDINGS: dict = _state.get("standings", {})
 
 GOLDEN_BOOT_RACE: dict = _state.get("golden_boot", {})
 PLAYMAKER_RACE: dict = _state.get("playmaker", {})
+GOLDEN_GLOVES_RACE: list = _state.get("golden_gloves", [])
 
 
 # ─── Relegation ───────────────────────────────────────────────────────────────

@@ -118,6 +118,33 @@ async def fetch_top_scorers(client: httpx.AsyncClient) -> dict:
     return scorers
 
 
+async def fetch_top_keepers(client: httpx.AsyncClient) -> list[dict]:
+    print("→ Fetching top goalkeepers (Golden Gloves race)...")
+    resp = await client.get(
+        f"{API_FOOTBALL_BASE}/players/topgoalkeepers",
+        params={"league": PL_LEAGUE_ID, "season": PL_SEASON},
+        headers={"x-apisports-key": API_FOOTBALL_KEY},
+        timeout=15.0,
+    )
+    data = resp.json().get("response", [])
+    keepers = []
+
+    for entry in data[:8]:
+        player = entry["player"]["name"]
+        stats = entry["statistics"][0]
+        team = stats["team"]["name"]
+        # API-Football v3: clean sheets live at statistics[0].games.cleansheets
+        clean_sheets = (stats.get("games") or {}).get("cleansheets") or 0
+        keepers.append({
+            "keeper": player,
+            "team": team,
+            "clean_sheets": clean_sheets,
+        })
+
+    print(f"  Found {len(keepers)} keepers")
+    return keepers
+
+
 async def fetch_top_assisters(client: httpx.AsyncClient) -> dict:
     print("→ Fetching top assisters (Playmaker award)...")
     resp = await client.get(
@@ -190,6 +217,9 @@ async def run():
         await asyncio.sleep(0.5)
 
         assisters = await fetch_top_assisters(client)
+        await asyncio.sleep(0.5)
+
+        keepers = await fetch_top_keepers(client)
 
     relegation_zone = derive_relegation_zone(standings)
     narrative_context = build_narrative_context(standings, fixtures, scorers)
@@ -202,6 +232,7 @@ async def run():
         "standings": standings,
         "golden_boot": scorers,
         "playmaker": assisters,
+        "golden_gloves": keepers,
         "relegation_zone": relegation_zone,
         "narrative_context": narrative_context,
     }

@@ -144,13 +144,9 @@ FIXTURE_LORE: dict[str, dict] = {
 }
 
 # ─── GOLDEN GLOVES RACE ──────────────────────────────────────────────────────
-# Populate this manually with real MW37 data before match day.
-# Do NOT guess — wrong stats embarrass the product.
-# Format: {"keeper": "Name", "team": "Team", "clean_sheets": N}
+# Loaded from season_state.json (written by stage_setup.py via API-Football)
 
-GOLDEN_GLOVES_RACE = [
-    {"keeper": "David Raya", "team": "Arsenal", "clean_sheets": 19},
-]
+from config import GOLDEN_GLOVES_RACE
 
 # ─── WILD FACTS ──────────────────────────────────────────────────────────────
 
