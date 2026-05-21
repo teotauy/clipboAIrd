@@ -19,9 +19,10 @@ interface FixturePreview {
 interface PreviewData {
   day_summary: string;
   standings_incomplete?: boolean;
+  playoff_note?: string;
   fixtures: FixturePreview[];
   key_battles: {
-    europe: { team: string; position: number; points: number }[];
+    europe: { team: string; position: number; points: number; min_position: number; max_position: number; locked: boolean }[];
     golden_boot: { player: string; team: string; goals: number }[];
     relegation: { team: string; points: number; position: number }[];
   };
@@ -85,6 +86,11 @@ export default function PreviewPage() {
             ⚠ Standings not final — some clubs have not completed MW37. Re-run stage setup when all results are in.
           </div>
         )}
+        {data.playoff_note && (
+          <div className="mt-4 inline-block bg-blue-900/40 border border-blue-700 text-blue-300 text-xs px-4 py-2 rounded-lg max-w-2xl">
+            {data.playoff_note}
+          </div>
+        )}
       </header>
 
       {/* Key Battles */}
@@ -94,12 +100,37 @@ export default function PreviewPage() {
           <div className="text-xs text-blue-400 uppercase tracking-widest mb-3">
             🌍 European Places
           </div>
-          {data.key_battles.europe.map((entry) => (
-            <div key={entry.team} className="text-sm py-1 border-b border-gray-800 last:border-0 flex justify-between">
-              <span className="text-white">#{entry.position} {entry.team}</span>
-              <span className="text-gray-500 text-xs">{entry.points}pts</span>
-            </div>
-          ))}
+          {data.key_battles.europe.map((entry) => {
+            const zone =
+              entry.position === 1 ? { label: "PL", color: "#d4a500" }
+              : entry.position <= 5 ? { label: "CL", color: "#2563eb" }
+              : entry.position <= 7 ? { label: "EL", color: "#ea6c1a" }
+              : { label: "UCL Q", color: "#16a34a" };
+            const spread = entry.min_position !== entry.max_position
+              ? ` (${entry.min_position}–${entry.max_position})`
+              : "";
+            return (
+              <div key={entry.team} className="text-sm py-1.5 border-b border-gray-800 last:border-0 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="text-[10px] font-bold flex-shrink-0" style={{ color: zone.color }}>
+                    {zone.label}
+                  </span>
+                  <span className={entry.locked ? "text-gray-400 line-through" : "text-white"}>
+                    {entry.team}
+                  </span>
+                  {entry.locked && (
+                    <span className="text-[9px] font-bold" style={{ color: zone.color }}>✓</span>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  {!entry.locked && spread && (
+                    <span className="text-[10px]" style={{ color: "#2a4060" }}>{spread}</span>
+                  )}
+                  <span className="text-gray-500 text-xs">{entry.points}pts</span>
+                </div>
+              </div>
+            );
+          })}
         </div>
 
         {/* Golden Boot */}
