@@ -89,6 +89,7 @@ def compute_spreads(
 
     total_permutations = len(outcomes)
 
+    # ── Pass 1 (probability): W/D/L with ±1 GD — fast, used for distribution ──
     for outcome_combo in outcomes:
         perm_points = dict(committed_points)
         perm_gd = dict(base_gd)
@@ -136,6 +137,47 @@ def compute_spreads(
             if len(bucket) < _MAX_EXAMPLES:
                 bucket.append(list(scenario_desc))
 
+    # ── Pass 2 (min/max): extreme GD margins to find true reachable positions ──
+    # A team can win 10-0 or lose 0-10; ±1 GD misses GD-tiebreaker overturns.
+    # We use ±10 GD for wins/losses to cover all realistic scorelines.
+    _EXTREME_GD = 10
+    extreme_best: dict[str, int] = dict(best_pos_seen)  # start from pass-1 values
+    extreme_worst: dict[str, int] = dict(worst_pos_seen)
+
+    for outcome_combo in outcomes:
+        perm_points = dict(committed_points)
+        perm_gd = dict(base_gd)
+        perm_gf = dict(base_gf)
+
+        for i, outcome in enumerate(outcome_combo):
+            state = live[i]
+            home = state.home
+            away = state.away
+
+            if outcome == 0:  # home win — apply maximum margin
+                perm_points[home] = perm_points.get(home, 0) + 3
+                perm_gd[home] = perm_gd.get(home, 0) + _EXTREME_GD
+                perm_gd[away] = perm_gd.get(away, 0) - _EXTREME_GD
+                perm_gf[home] = perm_gf.get(home, 0) + _EXTREME_GD
+            elif outcome == 1:  # draw — GD unchanged
+                perm_points[home] = perm_points.get(home, 0) + 1
+                perm_points[away] = perm_points.get(away, 0) + 1
+            else:  # away win
+                perm_points[away] = perm_points.get(away, 0) + 3
+                perm_gd[away] = perm_gd.get(away, 0) + _EXTREME_GD
+                perm_gd[home] = perm_gd.get(home, 0) - _EXTREME_GD
+                perm_gf[away] = perm_gf.get(away, 0) + _EXTREME_GD
+
+        sorted_teams = _sort_table(perm_points, perm_gd, perm_gf)
+        positions = {team: i + 1 for i, team in enumerate(sorted_teams)}
+
+        for team in committed_points:
+            pos = positions.get(team, 20)
+            if pos < extreme_best[team]:
+                extreme_best[team] = pos
+            if pos > extreme_worst[team]:
+                extreme_worst[team] = pos
+
     # Build ClubSpread objects
     current_table = _sort_table(
         committed_points,
@@ -148,9 +190,9 @@ def compute_spreads(
 
     for team in committed_points:
         freq = position_freq.get(team, {})
-        positions = list(freq.keys()) or [current_positions.get(team, 10)]
-        min_pos = min(positions)
-        max_pos = max(positions)
+        # Use extreme-GD pass for true min/max; fall back to frequency keys if no live matches
+        min_pos = extreme_best.get(team, min(freq.keys()) if freq else current_positions.get(team, 10))
+        max_pos = extreme_worst.get(team, max(freq.keys()) if freq else current_positions.get(team, 10))
 
         max_pts = max(
             committed_points.get(team, 0) + _max_remaining_points(team, live),
@@ -175,8 +217,8 @@ def compute_spreads(
             min_points=min_pts,
             max_points=max_pts,
             locked=is_locked,
-            cl_possible=min_pos <= 5,
-            cl_certain=max_pos <= 5,
+            cl_possible=min_pos <= 6,
+            cl_certain=max_pos <= 6,
             relegated_possible=max_pos >= 18,
             relegated_certain=min_pos >= 18,
             position_distribution=distribution,
