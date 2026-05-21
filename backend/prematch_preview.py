@@ -176,13 +176,11 @@ def build_full_preview(standings: dict, golden_boot: dict, spreads: dict | None 
     played_counts = [d.get("played", 37) for d in standings.values()]
     standings_incomplete = bool(played_counts) and min(played_counts) < max(played_counts)
 
-    # Golden Boot: only realistic contenders (within _BOOT_REALISTIC_GAP of leader)
-    leader_goals = max((d["goals"] for d in golden_boot.values()), default=0)
+    # Golden Boot: top 10 by goals
     realistic_boot = [
         {"player": p, "team": d["team"], "goals": d["goals"]}
         for p, d in sorted(golden_boot.items(), key=lambda x: x[1]["goals"], reverse=True)
-        if leader_goals - d["goals"] <= _BOOT_REALISTIC_GAP
-    ]
+    ][:10]
 
     # European contenders: teams that can still finish 1–8 (using spread data if available)
     if spreads:

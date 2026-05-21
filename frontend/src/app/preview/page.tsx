@@ -215,7 +215,7 @@ export default function PreviewPage() {
                     <span className="text-[10px] font-bold flex-shrink-0" style={{ color: zone.color }}>
                       {zone.label}
                     </span>
-                    <span className={entry.locked ? "text-gray-400 line-through" : "text-white"}>
+                    <span className={entry.locked ? "text-gray-400" : "text-white"}>
                       {entry.team}
                     </span>
                     {entry.locked && <span className="text-[9px] font-bold" style={{ color: zone.color }}>✓</span>}

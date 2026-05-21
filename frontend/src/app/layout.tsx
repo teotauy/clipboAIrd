@@ -1,12 +1,19 @@
 import type { Metadata } from "next";
-import { Kalam, Share_Tech_Mono } from "next/font/google";
+import { Kalam, Nunito, Share_Tech_Mono } from "next/font/google";
 import "./globals.css";
 import Nav from "@/components/Nav";
 
-// Handwriting body font — legible but looks hand-lettered
+// Handwriting font — headings, nav, labels, display text only
 const kalam = Kalam({
   weight: ["300", "400", "700"],
   variable: "--font-kalam",
+  subsets: ["latin"],
+});
+
+// Clean rounded sans for body copy and data — readable at small sizes
+const nunito = Nunito({
+  weight: ["400", "600", "700", "800"],
+  variable: "--font-nunito",
   subsets: ["latin"],
 });
 
@@ -30,7 +37,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${kalam.variable} ${shareTechMono.variable} h-full`}
+      className={`${kalam.variable} ${nunito.variable} ${shareTechMono.variable} h-full`}
     >
       <body className="min-h-full flex flex-col">
         {/* SVG filter for sketchy/rough border effect — applied via CSS */}
