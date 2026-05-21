@@ -112,11 +112,11 @@ EUROPEAN_PEDIGREE = [
     },
     {
         "team": "Liverpool",
-        "cl_seasons": 14,
+        "cl_seasons": 32,
         "cl_titles": 6,
         "el_titles": 3,
         "best_cl": "Winners (1977, 1978, 1981, 1984, 2005, 2019)",
-        "note": "Record 6 European Cups/CL titles for an English club",
+        "note": "32 seasons in European Cup/CL — 17 pre-1992, 15 in the CL era including 2025–26",
     },
     {
         "team": "Bournemouth",
@@ -148,7 +148,9 @@ FIXTURE_LORE: dict[str, dict] = {
 # Do NOT guess — wrong stats embarrass the product.
 # Format: {"keeper": "Name", "team": "Team", "clean_sheets": N}
 
-GOLDEN_GLOVES_RACE: list[dict] = []
+GOLDEN_GLOVES_RACE = [
+    {"keeper": "David Raya", "team": "Arsenal", "clean_sheets": 19},
+]
 
 # ─── WILD FACTS ──────────────────────────────────────────────────────────────
 

@@ -374,7 +374,7 @@ export default function PreviewPage() {
                   </div>
                   <div className="text-center">
                     <div className="text-xl font-black text-gray-300">{club.cl_seasons}</div>
-                    <div className="text-[10px] text-gray-500 uppercase">CL seasons</div>
+                    <div className="text-[10px] text-gray-500 uppercase">Euro seasons</div>
                   </div>
                   {club.el_titles > 0 && (
                     <div className="text-center">
