@@ -143,6 +143,21 @@ FIXTURE_LORE: dict[str, dict] = {
     },
 }
 
+# ─── GOLDEN BOOT — verified from premierleague.com before MW38 ───────────────
+
+VERIFIED_GOLDEN_BOOT = [
+    {"player": "Erling Haaland",        "team": "Manchester City",   "goals": 27},
+    {"player": "Igor Thiago",           "team": "Brentford",         "goals": 22},
+    {"player": "Antoine Semenyo",       "team": "Manchester City",   "goals": 16},
+    {"player": "João Pedro",            "team": "Chelsea",           "goals": 15},
+    {"player": "Viktor Gyökeres",       "team": "Arsenal",           "goals": 14},
+    {"player": "Morgan Gibbs-White",    "team": "Nottingham Forest", "goals": 14},
+    {"player": "Ollie Watkins",         "team": "Aston Villa",       "goals": 14},
+    {"player": "Dominic Calvert-Lewin", "team": "Leeds United",      "goals": 14},
+    {"player": "Junior Kroupi",         "team": "Bournemouth",       "goals": 13},
+    {"player": "Danny Welbeck",         "team": "Brighton",          "goals": 13},
+]
+
 # ─── GOLDEN GLOVES RACE ──────────────────────────────────────────────────────
 # Loaded from season_state.json (written by stage_setup.py via API-Football)
 

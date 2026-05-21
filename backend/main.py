@@ -14,7 +14,7 @@ from omniscient_engine import OmniscientEngine
 from delphi_webhook import build_delphi_payload, push_to_delphi
 from flowchart_generator import generate_all_flowcharts
 from prematch_preview import build_full_preview
-from season_facts import build_facts
+from season_facts import build_facts, VERIFIED_GOLDEN_BOOT
 from postmatch_recap import build_final_recap, build_fpl_recap, all_matches_finished
 from historical_chaos import SeasonChaosEngine
 from spread_calculator import compute_spreads, spreads_to_json
@@ -204,7 +204,9 @@ async def delphi_websocket(ws: WebSocket):
 @app.get("/preview")
 async def get_preview():
     spreads = spreads_to_json(compute_spreads(ingestion.match_states)) if ingestion.match_states else None
-    preview = build_full_preview(PRE_MATCH_STANDINGS, GOLDEN_BOOT_RACE, spreads=spreads)
+    # Use verified golden boot data (source: premierleague.com) over API data
+    boot = {p["player"]: {"team": p["team"], "goals": p["goals"], "assists": 0} for p in VERIFIED_GOLDEN_BOOT}
+    preview = build_full_preview(PRE_MATCH_STANDINGS, boot, spreads=spreads)
     preview["facts"] = build_facts()
     return preview
 
