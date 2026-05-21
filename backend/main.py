@@ -202,8 +202,7 @@ async def delphi_websocket(ws: WebSocket):
 
 @app.get("/preview")
 async def get_preview():
-    from spread_calculator import spreads_to_json
-    spreads = spreads_to_json(engine.spreads) if engine.spreads else None
+    spreads = spreads_to_json(compute_spreads(ingestion.match_states)) if ingestion.match_states else None
     return build_full_preview(PRE_MATCH_STANDINGS, GOLDEN_BOOT_RACE, spreads=spreads)
 
 

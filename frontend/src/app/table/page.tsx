@@ -47,12 +47,14 @@ interface DelphiPayload {
 
 // ─── ZONES ────────────────────────────────────────────────────────────────────
 
+// Aston Villa won the Europa League on 2026-05-21 — this opens a 6th PL CL spot.
+// PL positions 1–6 now qualify for the Champions League.
 const ZONES = [
   { from: 1,  to: 1,  label: "Champions",   short: "PL",   color: "#d4a500", hex: "#d4a500" },
-  { from: 2,  to: 5,  label: "Champ. Lg.",  short: "CL",   color: "#2563eb", hex: "#2563eb" },
-  { from: 6,  to: 7,  label: "Europa Lg.",  short: "EL",   color: "#ea6c1a", hex: "#ea6c1a" },
-  { from: 8,  to: 8,  label: "Conference",  short: "UECL", color: "#16a34a", hex: "#16a34a" },
-  { from: 9,  to: 17, label: "",            short: "",     color: "#1e2a3a", hex: "#1e2a3a" },
+  { from: 2,  to: 6,  label: "Champ. Lg.",  short: "CL",   color: "#2563eb", hex: "#2563eb" },
+  { from: 7,  to: 8,  label: "Europa Lg.",  short: "EL",   color: "#ea6c1a", hex: "#ea6c1a" },
+  { from: 9,  to: 9,  label: "Conference",  short: "UECL", color: "#16a34a", hex: "#16a34a" },
+  { from: 10, to: 17, label: "",            short: "",     color: "#1e2a3a", hex: "#1e2a3a" },
   { from: 18, to: 20, label: "Relegation",  short: "REL",  color: "#dc2626", hex: "#dc2626" },
 ];
 
@@ -61,7 +63,7 @@ function zoneFor(pos: number) {
 }
 
 // Positions after which a separator line is drawn
-const ZONE_BOUNDARY_AFTER = [1, 5, 7, 8, 17];
+const ZONE_BOUNDARY_AFTER = [1, 6, 8, 9, 17];
 
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
 
@@ -229,10 +231,39 @@ export default function SpreadTable() {
         {/* ── Spread table ─────────────────────────────────────────────── */}
         <div className="flex-1 overflow-y-auto px-6 pt-3 pb-20">
 
+          {/* Zone color bars header */}
+          <div className="flex mb-0.5" style={{ paddingLeft: "288px", paddingRight: "56px" }}>
+            <div className="flex-1 flex h-5 rounded overflow-hidden gap-px">
+              {ZONES.map((z) => {
+                const width = ((z.to - z.from + 1) / TOTAL_POSITIONS) * 100;
+                return (
+                  <div
+                    key={z.from}
+                    className="flex items-center justify-center overflow-hidden flex-shrink-0"
+                    style={{
+                      width: `${width}%`,
+                      backgroundColor: z.hex === "#1e2a3a" ? "#0d1520" : `${z.hex}22`,
+                      borderTop: `2px solid ${z.hex === "#1e2a3a" ? "#1a2535" : z.hex}`,
+                    }}
+                  >
+                    {z.short && (
+                      <span
+                        className="text-[9px] font-black tracking-wider truncate px-1"
+                        style={{ color: z.hex === "#1e2a3a" ? "#2a3f5c" : z.hex }}
+                      >
+                        {z.short}
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
           {/* Position axis header */}
           <div className="flex mb-2" style={{ paddingLeft: "288px", paddingRight: "56px" }}>
             <div className="flex-1 relative h-5">
-              {[1, 5, 6, 7, 8, 10, 14, 17, 18, 20].map((pos) => {
+              {[1, 6, 7, 8, 9, 10, 14, 17, 18, 20].map((pos) => {
                 const z = zoneFor(pos);
                 return (
                   <span

@@ -7,10 +7,11 @@ before kick-off, plus an overall "day at a glance" summary.
 from config import PRE_MATCH_STANDINGS, MATCHWEEK_38_FIXTURE_IDS, GOLDEN_BOOT_RACE, RELEGATION_ZONE_TEAMS
 
 
+# Aston Villa won the 2025-26 Europa League — opens a 6th CL spot for the PL.
 EUROPEAN_SPOTS = {
-    "champions_league": 5,
-    "europa_league": 7,
-    "conference_league_qualifier": 8,
+    "champions_league": 6,
+    "europa_league": 8,
+    "conference_league_qualifier": 9,
 }
 
 # Golden boot: only show players within this many goals of the leader
@@ -72,26 +73,22 @@ def _classify_stakes(home: str, away: str, standings: dict) -> list[str]:
                 stakes.append(f"{team} IN THE RELEGATION ZONE (pos {pos}) — must win")
         elif pos == 17:
             stakes.append(f"{team} one place above the drop — danger")
-        elif pos <= 5:
+        elif pos <= 6:
             if locked:
-                zone = (
-                    "Champions" if pos == 1
-                    else "Champions League" if pos <= 5
-                    else "Europa League"
-                )
+                zone = "Champions" if pos == 1 else "Champions League"
                 stakes.append(f"{team} locked into {pos}{_ordinal(pos)} — {zone} confirmed")
             else:
                 stakes.append(f"{team} in Champions League contention (currently {pos})")
-        elif pos <= 7:
+        elif pos <= 8:
             if locked:
                 stakes.append(f"{team} locked into {pos}{_ordinal(pos)} — Europa League confirmed")
             else:
                 stakes.append(f"{team} in Europa League contention (pos {pos})")
-        elif pos == 8:
+        elif pos == 9:
             if locked:
-                stakes.append(f"{team} locked into 8th — Conference League qualifier confirmed")
+                stakes.append(f"{team} locked into 9th — Conference League qualifier confirmed")
             else:
-                stakes.append(f"{team} holding Conference League qualifier spot (pos 8)")
+                stakes.append(f"{team} holding Conference League qualifier spot (pos 9)")
 
     return stakes if stakes else ["Pride and contracts on the line for both sides"]
 
@@ -151,7 +148,7 @@ def build_full_preview(standings: dict, golden_boot: dict, spreads: dict | None 
     ]
 
     # Build the "day at a glance" summary
-    cl_contenders = [t for t, d in standings.items() if d.get("position", 99) <= 6]
+    cl_contenders = [t for t, d in standings.items() if d.get("position", 99) <= 7]
     relegation_threatened = [t for t in RELEGATION_ZONE_TEAMS]
 
     boot_leader = max(golden_boot.items(), key=lambda x: x[1]["goals"], default=(None, {}))
@@ -193,7 +190,7 @@ def build_full_preview(standings: dict, golden_boot: dict, spreads: dict | None 
                     "locked": s.get("locked", False),
                 }
                 for s in spreads
-                if s["min_position"] <= 8
+                if s["min_position"] <= 9
             ],
             key=lambda x: x["position"],
         )
@@ -202,7 +199,7 @@ def build_full_preview(standings: dict, golden_boot: dict, spreads: dict | None 
             {"team": t, "position": d.get("position", 99), "points": d.get("points", 0),
              "min_position": d.get("position", 99), "max_position": d.get("position", 99), "locked": False}
             for t, d in sorted(standings.items(), key=lambda x: x[1].get("position", 99))
-            if d.get("position", 99) in range(1, 9)
+            if d.get("position", 99) in range(1, 10)
         ]
 
     # Playoff note: Liverpool and Bournemouth could be equal on every tiebreaker
