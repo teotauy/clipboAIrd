@@ -10,44 +10,26 @@ const EL_API_KEY  = process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY  ?? "";
 
 const PHRASES = [
   // Euphoria
-  { label: "GET IN!",           text: "GET IN!",                              emoji: "🎯", tier: "hype"    },
-  { label: "YESSSSS!",          text: "YESSSSSSS!",                           emoji: "🙌", tier: "hype"    },
   { label: "Oh you beauty",     text: "Oh you absolute beauty!",              emoji: "😍", tier: "hype"    },
-  { label: "Come on Reds",      text: "Come on you Reds! Let's go!",          emoji: "🔴", tier: "hype"    },
   { label: "That's my team",    text: "That is my team. That is my team.",    emoji: "❤️", tier: "hype"    },
   { label: "Easy",              text: "Easy. Easy. Easy.",                    emoji: "😎", tier: "hype"    },
+  { label: "Send it",           text: "Send it.",                             emoji: "🚀", tier: "hype"    },
+  { label: "Do the thing",      text: "Do the thing.",                        emoji: "⚡", tier: "hype"    },
+  { label: "Szoboszlai",        text: "Shaw bah shly.",                       emoji: "🇭🇺", tier: "hype"    },
 
   // Pain
-  { label: "Oh no no no",       text: "Oh no no no no no...",                 emoji: "😱", tier: "pain"    },
+  { label: "Pure pain",         text: "Pure pain.",                           emoji: "💀", tier: "pain"    },
   { label: "Absolutely gutted", text: "I am absolutely gutted. Gutted.",      emoji: "💔", tier: "pain"    },
-  { label: "What are you doing","text": "What are you DOING?! What is that?!", emoji: "😤", tier: "pain"    },
-  { label: "Clear it!",         text: "Just CLEAR IT! Clearrr it!",           emoji: "😰", tier: "pain"    },
   { label: "No no NO",          text: "No. No. NO!",                          emoji: "🙈", tier: "pain"    },
 
-  // Ref rage
-  { label: "REFEREE!",              text: "REFEREE! Come on! How is that not a foul?!",                         emoji: "📣", tier: "ref" },
-  { label: "That's offside",        text: "That is OFFSIDE! Are you blind?!",                                   emoji: "🚩", tier: "ref" },
-  { label: "Straight red",          text: "Straight red! That is a straight red! How has he not gone off?!",    emoji: "🟥", tier: "ref" },
-  { label: "That's a black card",   text: "That's a black card! That is absolutely a black card!",              emoji: "🖤", tier: "ref" },
-  { label: "Dinner reservations",   text: "That's all the extra time you're adding? Do you have dinner reservations?", emoji: "🍽️", tier: "ref" },
-  { label: "Scandal",               text: "It's a scandal. An absolute scandal.",                               emoji: "🤬", tier: "ref" },
-
   // Pub classics
-  { label: "YNWA",                  text: "You'll Never Walk Alone.",                                         emoji: "🎵", tier: "classic" },
-  { label: "This means more",       text: "We are Liverpool. This means more.",                               emoji: "🏆", tier: "classic" },
-  { label: "No outside drinks",     text: "Hey! No outside drinks in the bar!",                               emoji: "🍺", tier: "classic" },
-  { label: "Sit down!",             text: "Sit down! I can't see!",                                           emoji: "🪑", tier: "classic" },
-  { label: "Get to your seat",      text: "The game's started, get to your seat!",                            emoji: "⚽", tier: "classic" },
-  { label: "Quiet!",                text: "Shhhh! Quiet! I'm trying to watch the game!",                      emoji: "🤫", tier: "classic" },
-  { label: "Sound up",              text: "Can we get the sound up please? Turn it up!",                      emoji: "🔊", tier: "classic" },
-  { label: "Blow the whistle",       text: "Blow the whistle. Blow the whistle.",                              emoji: "🎵", tier: "classic" },
-  { label: "Guinness",               text: "Guinness.",                                                        emoji: "🖤", tier: "classic" },
-  { label: "Carlsberg",              text: "Carlsberg.",                                                       emoji: "🟡", tier: "classic" },
-  { label: "Budweiser",              text: "Budweiser.",                                                       emoji: "🔴", tier: "classic" },
-  { label: "Full round",             text: "Guinness, Carlsberg, and a Budweiser.",                            emoji: "🍺", tier: "classic" },
-  { label: "Another round",         text: "Same again? Same again. Someone's round.",                         emoji: "🍻", tier: "classic" },
-  { label: "Kop of Coffee",         text: "Kop of Coffee. Subscribe.",                                        emoji: "☕", tier: "classic" },
-  { label: "Brooklyn OLSC",         text: "Brooklyn Official Liverpool Supporters Club. Let's go!",           emoji: "🔴", tier: "classic" },
+  { label: "Blow the whistle",  text: "Blow the whistle. Blow the whistle.",  emoji: "🎵", tier: "classic" },
+  { label: "Guinness",          text: "Guinness.",                            emoji: "🖤", tier: "classic" },
+  { label: "Carlsberg",         text: "Carlsberg.",                           emoji: "🟡", tier: "classic" },
+  { label: "Budweiser",         text: "Budweiser.",                           emoji: "🔴", tier: "classic" },
+  { label: "Full round",        text: "Guinness, Carlsberg, and a Budweiser.", emoji: "🍺", tier: "classic" },
+  { label: "Kop of Coffee",     text: "Kop of Coffee. Subscribe.",            emoji: "☕", tier: "classic" },
+  { label: "Brooklyn OLSC",     text: "Brooklyn Official Liverpool Supporters Club. Let's go!", emoji: "🔴", tier: "classic" },
 ];
 
 const TIER_COLORS: Record<string, { bg: string; border: string; text: string; active: string }> = {
@@ -127,11 +109,10 @@ export default function Soundboard() {
     }
   }, [playing]);
 
-  const tiers = ["hype", "pain", "ref", "classic"] as const;
+  const tiers = ["hype", "pain", "classic"] as const;
   const tierLabels: Record<string, string> = {
     hype:    "💚 Pure Hype",
     pain:    "💔 Pure Pain",
-    ref:     "🤬 Ref Rage",
     classic: "🎵 Pub Classics",
   };
 
