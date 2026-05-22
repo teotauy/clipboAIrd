@@ -10,8 +10,6 @@ const EL_API_KEY  = process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY  ?? "";
 
 const PHRASES = [
   // Euphoria
-  { label: "Oh you beauty",     text: "Oh you absolute beauty!",              emoji: "😍", tier: "hype"    },
-  { label: "That's my team",    text: "That is my team. That is my team.",    emoji: "❤️", tier: "hype"    },
   { label: "Easy",              text: "Easy. Easy. Easy.",                    emoji: "😎", tier: "hype"    },
   { label: "Send it",           text: "Send it.",                             emoji: "🚀", tier: "hype"    },
   { label: "Do the thing",      text: "Do the thing.",                        emoji: "⚡", tier: "hype"    },
