@@ -17,8 +17,6 @@ const PHRASES = [
 
   // Pain
   { label: "Pure pain",         text: "Pure pain.",                           emoji: "💀", tier: "pain"    },
-  { label: "Absolutely gutted", text: "I am absolutely gutted. Gutted.",      emoji: "💔", tier: "pain"    },
-  { label: "No no NO",          text: "No. No. NO!",                          emoji: "🙈", tier: "pain"    },
 
   // Pub classics
   { label: "Blow the whistle",  text: "Blow the whistle. Blow the whistle.",  emoji: "🎵", tier: "classic" },
@@ -26,8 +24,6 @@ const PHRASES = [
   { label: "Carlsberg",         text: "Carlsberg.",                           emoji: "🟡", tier: "classic" },
   { label: "Budweiser",         text: "Budweiser.",                           emoji: "🔴", tier: "classic" },
   { label: "Full round",        text: "Guinness, Carlsberg, and a Budweiser.", emoji: "🍺", tier: "classic" },
-  { label: "Kop of Coffee",     text: "Kop of Coffee. Subscribe.",            emoji: "☕", tier: "classic" },
-  { label: "Brooklyn OLSC",     text: "Brooklyn Official Liverpool Supporters Club. Let's go!", emoji: "🔴", tier: "classic" },
 ];
 
 const TIER_COLORS: Record<string, { bg: string; border: string; text: string; active: string }> = {
