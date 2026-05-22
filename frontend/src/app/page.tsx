@@ -25,6 +25,7 @@ interface SpreadEntry {
   cl_certain: boolean;
   relegated_possible: boolean;
   relegated_certain: boolean;
+  el_winner?: boolean;
   best_case: string[];
   worst_case: string[];
   spread_width: number;
@@ -682,10 +683,11 @@ export default function OraclePage() {
         <div className="flex flex-1 overflow-hidden">
 
           {/* Spread table */}
-          <div className="flex-1 overflow-y-auto px-6 pt-3 pb-20">
+          <div className="flex-1 overflow-y-auto overflow-x-auto pt-3 pb-20">
+          <div className="min-w-[600px] px-3 md:px-6">
 
             {/* Zone color bars */}
-            <div className="flex mb-0.5" style={{ paddingLeft: "288px", paddingRight: "56px" }}>
+            <div className="flex mb-0.5" style={{ paddingLeft: "256px", paddingRight: "56px" }}>
               <div className="flex-1 flex h-5 rounded overflow-hidden gap-px" style={{ filter: "url(#sketchy)" }}>
                 {ZONES.map((z) => {
                   const width = ((z.to - z.from + 1) / TOTAL_POSITIONS) * 100;
@@ -702,7 +704,7 @@ export default function OraclePage() {
             </div>
 
             {/* Position axis */}
-            <div className="flex mb-2" style={{ paddingLeft: "288px", paddingRight: "56px" }}>
+            <div className="flex mb-2" style={{ paddingLeft: "256px", paddingRight: "56px" }}>
               <div className="flex-1 relative h-5">
                 {[1, 5, 6, 7, 8, 9, 10, 14, 17, 18, 20].map((pos) => {
                   const z = zoneFor(pos);
@@ -734,7 +736,7 @@ export default function OraclePage() {
                 return (
                   <div key={entry.team}>
                     {showSeparatorAbove && (
-                      <div className="relative my-1 flex items-center" style={{ paddingLeft: "288px", paddingRight: "56px" }}>
+                      <div className="relative my-1 flex items-center" style={{ paddingLeft: "256px", paddingRight: "56px" }}>
                         <div className="flex-1 h-px" style={{ background: `linear-gradient(to right, transparent, ${zone.hex}60, transparent)` }} />
                       </div>
                     )}
@@ -752,10 +754,12 @@ export default function OraclePage() {
                       <div className="w-10 flex-shrink-0 text-center font-black text-base py-4" style={{ color: zone.hex === "#1e2a3a" ? "#2a3f5c" : zone.hex }}>
                         {entry.current_position}
                       </div>
-                      <div className="w-52 flex-shrink-0 px-3 py-3">
+                      <div className="w-48 flex-shrink-0 px-3 py-3">
                         <div className="font-bold text-sm leading-tight tracking-tight" style={{ color: isLfc ? "#f87171" : "#e8ecf4" }}>
                           {entry.team}
                           {entry.locked && <span className="ml-2 text-[9px] font-black tracking-widest uppercase" style={{ color: zone.hex }}>SEALED</span>}
+                          {!entry.locked && entry.cl_certain && <span className="ml-2 text-[9px] font-black tracking-widest uppercase" style={{ color: "#2563eb" }}>CL ✓</span>}
+                          {!entry.locked && entry.relegated_certain && <span className="ml-2 text-[9px] font-black tracking-widest uppercase" style={{ color: "#dc2626" }}>DOWN ✓</span>}
                         </div>
                         <div className="flex items-center gap-2 mt-1">
                           <span className="text-[11px] font-mono font-semibold" style={{ color: "#4a6080" }}>{entry.current_points}pts</span>
@@ -822,10 +826,11 @@ export default function OraclePage() {
                 );
               })}
             </div>
+          </div>{/* end min-w wrapper */}
           </div>
 
-          {/* Right panel */}
-          <div className="w-72 flex-shrink-0 flex flex-col overflow-hidden" style={{ borderLeft: "1px solid #0f1929", backgroundColor: "#06090f" }}>
+          {/* Right panel — hidden on mobile */}
+          <div className="hidden md:flex w-72 flex-shrink-0 flex-col overflow-hidden" style={{ borderLeft: "1px solid #0f1929", backgroundColor: "#06090f" }}>
             <div className="flex flex-shrink-0" style={{ borderBottom: "1px solid #0f1929" }}>
               {(["spread", "fpl"] as const).map((tab) => (
                 <button key={tab} onClick={() => setRightTab(tab)} className="flex-1 py-3 text-[11px] font-bold uppercase tracking-widest transition"
@@ -961,6 +966,12 @@ export default function OraclePage() {
           </div>
         </div>
       </div>{/* end #table */}
+
+      {/* Mobile-only FPL panel (right panel hidden on small screens) */}
+      <div className="md:hidden border-t" style={{ borderColor: "#0f1929", backgroundColor: "#06090f" }}>
+        <div className="px-4 py-3 text-[11px] font-bold uppercase tracking-widest" style={{ color: "#2a4060", borderBottom: "1px solid #0f1929" }}>🏆 Brooklyn OLSC</div>
+        <FPLPanel />
+      </div>
 
 
       {/* ══════════════════════════════════════════════════════════════════════

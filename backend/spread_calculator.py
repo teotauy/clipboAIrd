@@ -228,6 +228,31 @@ def compute_spreads(
             position_scenarios=pos_scenarios.get(team, {}),
         )
 
+    # ── Post-processing: override for cup competition CL guarantees ───────────
+    # Aston Villa won the 2025/26 Europa League on 20 May 2026 — CL secured
+    # regardless of final league position (even 6th gets CL via EL winner route).
+    if "Aston Villa" in spreads:
+        villa = spreads["Aston Villa"]
+        spreads["Aston Villa"] = ClubSpread(
+            team=villa.team,
+            current_points=villa.current_points,
+            current_gd=villa.current_gd,
+            current_position=villa.current_position,
+            min_position=villa.min_position,
+            max_position=villa.max_position,
+            min_points=villa.min_points,
+            max_points=villa.max_points,
+            locked=villa.locked,
+            cl_possible=True,
+            cl_certain=True,          # EL win guarantees CL entry
+            relegated_possible=villa.relegated_possible,
+            relegated_certain=villa.relegated_certain,
+            position_distribution=villa.position_distribution,
+            best_case_scenario=villa.best_case_scenario,
+            worst_case_scenario=villa.worst_case_scenario,
+            position_scenarios=villa.position_scenarios,
+        )
+
     return spreads
 
 
