@@ -179,7 +179,7 @@ WILD_FACTS = [
     {
         "stat": "59,049",
         "label": "possible result combinations",
-        "detail": "3 outcomes × 10 games = the ceiling. Most produce the same table. The ones that don't are the ones that matter.",
+        "detail": "3 outcomes × 10 games. All of them happen simultaneously. Only one combination is real.",
         "icon": "🔢",
     },
     {
