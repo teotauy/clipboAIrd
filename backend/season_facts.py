@@ -178,8 +178,8 @@ GOLDEN_GLOVES_RACE = [
 WILD_FACTS = [
     {
         "stat": "59,049",
-        "label": "mathematically possible endings",
-        "detail": "That's 3 outcomes (W/D/L) across 10 simultaneous games.",
+        "label": "possible result combinations",
+        "detail": "3 outcomes × 10 games = the ceiling. Most produce the same table. The ones that don't are the ones that matter.",
         "icon": "🔢",
     },
     {

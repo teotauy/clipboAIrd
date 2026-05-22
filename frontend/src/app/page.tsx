@@ -401,7 +401,9 @@ export default function OraclePage() {
               <div className="text-xs text-gray-600 uppercase tracking-[0.3em] mb-3">Matchweek 38 · Final Day</div>
               <h1 className="text-6xl md:text-8xl font-black text-white leading-none tracking-tighter mb-6"
                 style={{ fontFamily: "var(--font-kalam), cursive" }}>
-                The Day<br /><span className="text-red-500">Ahead</span>
+                <span className="line-through opacity-30">Everything</span>
+                <span className="text-red-500"> A few things</span>
+                <br />on the line
               </h1>
               {previewData ? (
                 <p className="text-gray-400 max-w-2xl mx-auto text-base leading-relaxed">{previewData.day_summary}</p>
