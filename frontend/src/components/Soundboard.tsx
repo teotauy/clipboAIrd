@@ -17,6 +17,9 @@ const PHRASES = [
 
   // Pain
   { label: "Pure pain",         text: "Pure pain.",                           emoji: "💀", tier: "pain"    },
+  { label: "No outside drinks", text: "No outside drinks.",                   emoji: "🚫", tier: "pain"    },
+  { label: "Black card",        text: "That's a black card.",                 emoji: "🟫", tier: "pain"    },
+  { label: "Dinner rez",        text: "That's all the extra time you're adding? Do you have dinner reservations?", emoji: "🍽️", tier: "pain"    },
 
   // Pub classics
   { label: "Blow the whistle",  text: "Blow the whistle. Blow the whistle.",  emoji: "🎵", tier: "classic" },
