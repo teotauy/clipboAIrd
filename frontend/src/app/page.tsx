@@ -85,7 +85,7 @@ interface ChaosData { most_chaotic_goal: ChaosGoal | null; top_10: ChaosGoal[]; 
 const ZONES = [
   { from: 1,  to: 1,  label: "Champions",       short: "PL",   hex: "#d4a500" },
   { from: 2,  to: 5,  label: "Champ. Lg.",       short: "CL",   hex: "#2563eb" },
-  { from: 6,  to: 6,  label: "CL if Villa 5th", short: "CL?",  hex: "#7c3aed" },
+  { from: 6,  to: 6,  label: "CL (if Villa 5th)", short: "CL?",  hex: "#7c3aed" },
   { from: 7,  to: 8,  label: "Europa Lg.",       short: "EL",   hex: "#ea6c1a" },
   { from: 9,  to: 9,  label: "Conference",       short: "UECL", hex: "#16a34a" },
   { from: 10, to: 17, label: "",                 short: "",     hex: "#1e2a3a" },
@@ -255,6 +255,7 @@ export default function OraclePage() {
   const [rightTab, setRightTab] = useState<"spread" | "fpl">("spread");
   const [posHistory, setPosHistory] = useState<{ time: string; team: string; delta: number }[]>([]);
   const [clickedCell, setClickedCell] = useState<{ team: string; pos: number } | null>(null);
+  const [mobileSheet, setMobileSheet] = useState<string | null>(null); // team name for mobile bottom sheet
   const prevSpreads = useRef<Record<string, SpreadEntry>>({});
 
   // countdown to next poll
@@ -454,7 +455,7 @@ export default function OraclePage() {
                     const pos = entry.position;
                     const zone = pos === 1 ? { label: "PL", color: "#d4a500" }
                       : pos <= 5 ? { label: "CL", color: "#2563eb" }
-                      : pos === 6 ? { label: "CL?", color: "#7c3aed" }
+                      : pos === 6 ? { label: "CL?*", color: "#7c3aed" }
                       : pos <= 8 ? { label: "EL", color: "#ea6c1a" }
                       : { label: "UECL", color: "#16a34a" };
                     return (
@@ -468,7 +469,7 @@ export default function OraclePage() {
                       </div>
                     );
                   })}
-                  <div className="mt-3 text-[10px] text-purple-400 leading-snug">⚠ CL? = only if Aston Villa finish 5th</div>
+                  <div className="mt-3 text-[10px] text-purple-400 leading-snug">⚠ CL? = 6th place earns CL only if Villa finish 5th — Villa already secured CL by winning the Europa League</div>
                 </div>
               </Reveal>
 
@@ -750,6 +751,7 @@ export default function OraclePage() {
                       }}
                       onMouseEnter={() => { setHovered(entry.team); if (clickedCell && clickedCell.team !== entry.team) setClickedCell(null); }}
                       onMouseLeave={() => setHovered(null)}
+                      onClick={() => setMobileSheet(entry.team)}
                     >
                       <div className="w-10 flex-shrink-0 text-center font-black text-base py-4" style={{ color: zone.hex === "#1e2a3a" ? "#2a3f5c" : zone.hex }}>
                         {entry.current_position}
@@ -972,6 +974,92 @@ export default function OraclePage() {
         <div className="px-4 py-3 text-[11px] font-bold uppercase tracking-widest" style={{ color: "#2a4060", borderBottom: "1px solid #0f1929" }}>🏆 Brooklyn OLSC</div>
         <FPLPanel />
       </div>
+
+      {/* Mobile bottom sheet — spread details for tapped team */}
+      {mobileSheet && (() => {
+        const entry = spreads.find((s) => s.team === mobileSheet);
+        if (!entry) return null;
+        const dist = entry.position_distribution;
+        const maxP = Math.max(...Object.values(dist), 0.001);
+        const sorted = Object.entries(dist).sort((a, b) => b[1] - a[1]);
+        const mostLikely = sorted[0];
+        const zone = zoneFor(entry.current_position);
+        return (
+          <div className="md:hidden fixed inset-0 z-50 flex flex-col justify-end" onClick={() => setMobileSheet(null)}>
+            {/* Backdrop */}
+            <div className="absolute inset-0" style={{ backgroundColor: "rgba(0,0,0,0.7)" }} />
+            {/* Sheet */}
+            <div
+              className="relative rounded-t-2xl p-5 overflow-y-auto max-h-[80vh]"
+              style={{ backgroundColor: "#06090f", border: "1px solid #1a2535" }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Handle */}
+              <div className="w-10 h-1 rounded-full mx-auto mb-5" style={{ backgroundColor: "#1a2535" }} />
+
+              {/* Header */}
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  <div className="text-lg font-black leading-tight" style={{ color: zone.hex, fontFamily: "var(--font-kalam), cursive" }}>{entry.team}</div>
+                  <div className="text-[10px] uppercase tracking-widest mt-0.5" style={{ color: "#2a4060" }}>
+                    {entry.locked ? "Position sealed" : `Can finish ${entry.min_position}–${entry.max_position}`}
+                  </div>
+                </div>
+                <button className="text-gray-600 text-xl leading-none p-1" onClick={() => setMobileSheet(null)}>✕</button>
+              </div>
+
+              {/* Mini bar chart */}
+              <div className="flex gap-[2px] h-16 items-end mb-3 rounded-md overflow-hidden" style={{ backgroundColor: "#0a0f1e", padding: "4px" }}>
+                {Array.from({ length: TOTAL_POSITIONS }, (_, i) => {
+                  const pos = i + 1; const prob = dist[String(pos)] ?? 0;
+                  const h = prob === 0 ? 3 : 8 + (prob / maxP) * 92;
+                  const z = zoneFor(pos);
+                  return <div key={pos} className="flex-1 rounded-t transition-all duration-700"
+                    style={{ height: `${h}%`, backgroundColor: z.hex, opacity: prob === 0 ? 0.06 : 0.25 + 0.75 * (prob / maxP) }} />;
+                })}
+              </div>
+
+              {mostLikely && (
+                <div className="text-sm mb-4 flex items-baseline gap-2">
+                  <span style={{ color: "#4a6080" }}>Most likely finish</span>
+                  <span className="font-black text-xl" style={{ color: zoneFor(Number(mostLikely[0])).hex }}>{mostLikely[0]}</span>
+                  <span className="text-xs" style={{ color: "#4a6080" }}>{(Number(mostLikely[1]) * 100).toFixed(1)}%</span>
+                </div>
+              )}
+
+              {/* Best / worst */}
+              {!entry.locked && (
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  <div className="rounded-lg p-3" style={{ backgroundColor: "#0a0f1e" }}>
+                    <div className="text-[9px] uppercase tracking-widest mb-1" style={{ color: "#16a34a" }}>Best case</div>
+                    <div className="text-lg font-black" style={{ color: zoneFor(entry.min_position).hex }}>{entry.min_position}</div>
+                    {entry.best_case.length > 0 && <div className="text-[10px] mt-1 leading-snug" style={{ color: "#4a6080" }}>{entry.best_case.join(" · ")}</div>}
+                  </div>
+                  <div className="rounded-lg p-3" style={{ backgroundColor: "#0a0f1e" }}>
+                    <div className="text-[9px] uppercase tracking-widest mb-1" style={{ color: "#dc2626" }}>Worst case</div>
+                    <div className="text-lg font-black" style={{ color: zoneFor(entry.max_position).hex }}>{entry.max_position}</div>
+                    {entry.worst_case.length > 0 && <div className="text-[10px] mt-1 leading-snug" style={{ color: "#4a6080" }}>{entry.worst_case.join(" · ")}</div>}
+                  </div>
+                </div>
+              )}
+
+              {/* Full probability breakdown */}
+              <div className="text-[9px] font-black uppercase tracking-widest mb-2" style={{ color: "#1e3050" }}>Full probability breakdown</div>
+              <div className="grid grid-cols-4 gap-1.5">
+                {sorted.filter(([, p]) => p > 0).map(([pos, prob]) => {
+                  const z = zoneFor(Number(pos));
+                  return (
+                    <div key={pos} className="rounded p-2 text-center" style={{ backgroundColor: "#0a0f1e", borderLeft: `2px solid ${z.hex}` }}>
+                      <div className="text-xs font-black" style={{ color: z.hex }}>{pos}</div>
+                      <div className="text-[10px]" style={{ color: "#4a6080" }}>{(prob * 100).toFixed(0)}%</div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
 
       {/* ══════════════════════════════════════════════════════════════════════
