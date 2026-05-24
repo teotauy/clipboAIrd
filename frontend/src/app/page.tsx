@@ -256,6 +256,7 @@ export default function OraclePage() {
   const [posHistory, setPosHistory] = useState<{ time: string; team: string; delta: number }[]>([]);
   const [clickedCell, setClickedCell] = useState<{ team: string; pos: number } | null>(null);
   const [mobileSheet, setMobileSheet] = useState<string | null>(null); // team name for mobile bottom sheet
+  const [selectedTeam, setSelectedTeam] = useState<string | null>(null); // clicked/locked for right panel
   const prevSpreads = useRef<Record<string, SpreadEntry>>({});
 
   // countdown to next poll
@@ -347,7 +348,7 @@ export default function OraclePage() {
     return { score: `${myGoals}–${theirGoals} ${opp}`, status: min };
   }, [liveScores]);
 
-  const hoveredEntry = spreads.find((s) => s.team === hovered) ?? null;
+  const hoveredEntry = spreads.find((s) => s.team === hovered) ?? spreads.find((s) => s.team === selectedTeam) ?? null;
   const ZONE_TOP_BOUNDARIES = new Set(ZONE_BOUNDARY_AFTER.map((p) => p + 1));
 
   const facts = previewData?.facts;
@@ -726,6 +727,7 @@ export default function OraclePage() {
                 const maxProb = Math.max(...Object.values(dist), 0.001);
                 const isLfc = entry.team === "Liverpool";
                 const isHovered = hovered === entry.team;
+                const isSelected = selectedTeam === entry.team;
                 const isFlashing = flashingTeams.has(entry.team);
                 const zone = zoneFor(entry.current_position);
                 const live = liveScoreFor(entry.team);
@@ -745,13 +747,13 @@ export default function OraclePage() {
                       className={`flex items-center rounded-lg cursor-pointer select-none transition-all duration-200 ${isFlashing ? "animate-pulse" : ""}`}
                       style={{
                         marginBottom: "1px",
-                        backgroundColor: isHovered ? "#0e1628" : isLfc ? "#0f0a0a" : "transparent",
-                        borderLeft: isLfc ? `3px solid ${zone.hex}` : isHovered ? `3px solid ${zone.hex}44` : "3px solid transparent",
-                        outline: isFlashing ? `1px solid ${zone.hex}55` : undefined,
+                        backgroundColor: isHovered || isSelected ? "#0e1628" : isLfc ? "#0f0a0a" : "transparent",
+                        borderLeft: isLfc ? `3px solid ${zone.hex}` : (isHovered || isSelected) ? `3px solid ${zone.hex}44` : "3px solid transparent",
+                        outline: isSelected ? `1px solid ${zone.hex}88` : isFlashing ? `1px solid ${zone.hex}55` : undefined,
                       }}
                       onMouseEnter={() => { setHovered(entry.team); if (clickedCell && clickedCell.team !== entry.team) setClickedCell(null); }}
                       onMouseLeave={() => setHovered(null)}
-                      onClick={() => setMobileSheet(entry.team)}
+                      onClick={() => { setSelectedTeam((t) => t === entry.team ? null : entry.team); setMobileSheet(entry.team); setRightTab("spread"); }}
                     >
                       <div className="w-10 flex-shrink-0 text-center font-black text-base py-4" style={{ color: zone.hex === "#1e2a3a" ? "#2a3f5c" : zone.hex }}>
                         {entry.current_position}
@@ -847,7 +849,12 @@ export default function OraclePage() {
                 <div className="flex-1 overflow-y-auto p-5">
                   {hoveredEntry ? (
                     <div>
-                      <div className="text-base font-black mb-0.5" style={{ color: zoneFor(hoveredEntry.current_position).hex, fontFamily: "var(--font-kalam), cursive" }}>{hoveredEntry.team}</div>
+                      <div className="flex items-start justify-between mb-0.5">
+                        <div className="text-base font-black" style={{ color: zoneFor(hoveredEntry.current_position).hex, fontFamily: "var(--font-kalam), cursive" }}>{hoveredEntry.team}</div>
+                        {selectedTeam === hoveredEntry.team && (
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ backgroundColor: "#0a0f1e", color: "#4a6080" }}>📌 pinned</span>
+                        )}
+                      </div>
                       <div className="text-[10px] uppercase tracking-widest mb-4" style={{ color: "#2a4060" }}>
                         {hoveredEntry.locked ? "Position sealed" : `Range: ${hoveredEntry.min_position}–${hoveredEntry.max_position}`}
                       </div>
@@ -936,7 +943,7 @@ export default function OraclePage() {
                   ) : (
                     <div className="text-center mt-16">
                       <div className="text-2xl mb-3">◎</div>
-                      <div className="text-[11px]" style={{ color: "#2a4060" }}>Hover a team<br />to see their spread</div>
+                      <div className="text-[11px]" style={{ color: "#2a4060" }}>Hover or click a team<br />to see their spread<br /><span style={{ color: "#1e3050" }}>Click to pin it</span></div>
                     </div>
                   )}
                 </div>
