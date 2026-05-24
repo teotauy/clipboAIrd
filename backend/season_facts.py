@@ -31,9 +31,9 @@ HISTORY_ON_THE_LINE = [
         "headline": "Shattering their own ceiling",
         "body": (
             "Bournemouth's best ever Premier League finish is 9th, set in 2016–17. "
-            "They're currently 6th. Any result today that keeps them in the top 9 "
-            "breaks their record. A top-6 finish — CL possible — would be "
-            "inconceivable by any previous measure of this club."
+            "They're currently 6th — but they play Forest (5th) today, making this a "
+            "direct 5th-place shootout. Win and they could jump to 5th: confirmed Champions League, "
+            "no caveats. A club that was in League One three years ago."
         ),
         "icon": "📈",
         "color": "#e11d48",
