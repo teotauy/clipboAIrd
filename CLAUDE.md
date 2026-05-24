@@ -396,21 +396,21 @@ Cross-referenced from orders.csv (column "Product Form: Name") against FPL leagu
 
 | entry_id | FPL Name | Real Name | Pre-GW38 Rank |
 |---|---|---|---|
-| 7419755 | Colby Black | Colby Black | 3 👑 highest member |
-| 516789 | Sam Clark | Sam Clark | 5 |
-| 205646 | Bill Palka | Bill Palka | 6 |
-| 202206 | Benjamin Hicks | Benjamin Hicks | 15 |
-| 6933161 | Cillian Sheehan | Cillian Sheehan | 22 |
-| 5852114 | Marisol Gallo | Marisol Gallo Jalil | 23 |
-| 779827 | George Lolashvili | Rati Lolashvili | 26 |
-| 8089459 | Prateek Dwivedi | Prateek Dwivedi | 25 |
-| 4090828 | Catalina Caro | Catalina Caro | 27 |
-| 673835 | Al Nieliwocki | al nieliwocki | 29 |
-| 2715912 | Brett Portnoy | Brett Portnoy | 33 |
+| 7419755 | Colby Black | Colby Black | 2 👑 highest member |
+| 205646 | Bill Palka | Bill Palka | 5 |
+| 516789 | Sam Clark | Sam Clark | 7 |
+| 202206 | Benjamin Hicks | Benjamin Hicks | 13 |
+| 6933161 | Cillian Sheehan | Cillian Sheehan | 21 |
+| 5852114 | Marisol Gallo | Marisol Gallo Jalil | 22 |
+| 4090828 | Catalina Caro | Catalina Caro | 23 |
+| 8089459 | Prateek Dwivedi | Prateek Dwivedi | 24 |
+| 779827 | George Lolashvili | Rati Lolashvili | 27 |
+| 673835 | Al Nieliwocki | al nieliwocki | 28 |
+| 2715912 | Brett Portnoy | Brett Portnoy | 31 |
 | 5786521 | Terje Vist | TERJE VIST | 37 |
-| 9014532 | Daniel Montoya | Daniel Montoya | 38 |
-| 7297423 | Aarif Attarwala | Aarif Attarwala | 41 |
-| 3711462 | Adam McDaid | Adam McDaid | 42 |
+| 9014532 | Daniel Montoya | Daniel Montoya | 39 |
+| 3711462 | Adam McDaid | Adam McDaid | 43 |
+| 7297423 | Aarif Attarwala | Aarif Attarwala | 45 |
 
 Hardcoded in `FPLPanel.tsx` as `BROOKLYN_MEMBERS`. `entry_id` is now included in `fpl_service.py` `get_standings()` output.
 
