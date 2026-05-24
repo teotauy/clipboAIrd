@@ -96,11 +96,11 @@ EUROPEAN_PEDIGREE = [
     },
     {
         "team": "Manchester United",
-        "cl_seasons": 27,
+        "cl_seasons": 21,
         "cl_titles": 3,
         "el_titles": 1,
         "best_cl": "Winners (1968, 1999, 2008)",
-        "note": "Most CL appearances of any English club",
+        "note": "21 CL-era appearances — second only to Liverpool among English clubs",
     },
     {
         "team": "Aston Villa",
