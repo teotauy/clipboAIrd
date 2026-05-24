@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import "leaflet/dist/leaflet.css";
 
 // ─── STADIUM DATA ─────────────────────────────────────────────────────────────
@@ -105,6 +105,9 @@ export default function StadiumMap({ liveScores, spreads, flashingTeams }: Stadi
   const markersRef = useRef<Map<string, ReturnType<typeof import("leaflet").circleMarker>>>(new Map());
   const polylinesRef = useRef<ReturnType<typeof import("leaflet").polyline>[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
+  const radarLayerRef = useRef<ReturnType<typeof import("leaflet").tileLayer> | null>(null);
+  const [radarOn, setRadarOn] = useState(false);
+  const [radarAge, setRadarAge] = useState<string | null>(null);
 
   // Build a lookup: team → position
   const posMap = Object.fromEntries(spreads.map((s) => [s.team, s.current_position]));
@@ -152,6 +155,38 @@ export default function StadiumMap({ liveScores, spreads, flashingTeams }: Stadi
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // ── Radar layer toggle ────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!mapRef.current) return;
+    import("leaflet").then(async (L) => {
+      const map = mapRef.current as ReturnType<typeof L.map>;
+      if (radarOn) {
+        // Remove existing layer first
+        if (radarLayerRef.current) { radarLayerRef.current.remove(); radarLayerRef.current = null; }
+        try {
+          const res = await fetch("https://api.rainviewer.com/public/weather-maps.json");
+          const data = await res.json();
+          const frames: { time: number; path: string }[] = data?.radar?.past ?? [];
+          if (frames.length === 0) return;
+          const latest = frames[frames.length - 1];
+          const age = new Date(latest.time * 1000);
+          const mins = Math.round((Date.now() - age.getTime()) / 60000);
+          setRadarAge(`${mins}m ago`);
+          const layer = L.tileLayer(
+            `https://tilecache.rainviewer.com${latest.path}/256/{z}/{x}/{y}/2/1_1.png`,
+            { opacity: 0.6, maxZoom: 19, tileSize: 256, zIndex: 500 }
+          );
+          layer.addTo(map);
+          radarLayerRef.current = layer as never;
+        } catch { /* silently skip if radar unavailable */ }
+      } else {
+        if (radarLayerRef.current) { radarLayerRef.current.remove(); radarLayerRef.current = null; }
+        setRadarAge(null);
+      }
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [radarOn]);
 
   // ── Update markers and threads whenever data changes ──────────────────────
   useEffect(() => {
@@ -298,14 +333,31 @@ export default function StadiumMap({ liveScores, spreads, flashingTeams }: Stadi
         ))}
       </div>
 
-      {/* Live indicator */}
-      {activeTeams.size > 0 && (
-        <div className="absolute top-3 right-3 z-[1000] flex items-center gap-1.5 text-[11px] font-semibold text-green-400"
-          style={{ background: "#0a0f1e99", padding: "3px 8px", borderRadius: "999px", border: "1px solid #16a34a44" }}>
-          <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-          {liveScores.length} live
-        </div>
-      )}
+      {/* Top-right controls */}
+      <div className="absolute top-3 right-3 z-[1000] flex items-center gap-2">
+        {/* Radar toggle */}
+        <button
+          onClick={() => setRadarOn((v) => !v)}
+          className="flex items-center gap-1.5 text-[11px] font-semibold transition-all"
+          style={{
+            background: radarOn ? "#1e3a5f" : "#0a0f1e99",
+            padding: "3px 8px", borderRadius: "999px",
+            border: `1px solid ${radarOn ? "#3b82f6" : "#1e2a3a"}`,
+            color: radarOn ? "#93c5fd" : "#4a6080",
+          }}
+        >
+          🌧 {radarOn ? (radarAge ?? "radar on") : "radar"}
+        </button>
+
+        {/* Live indicator */}
+        {activeTeams.size > 0 && (
+          <div className="flex items-center gap-1.5 text-[11px] font-semibold text-green-400"
+            style={{ background: "#0a0f1e99", padding: "3px 8px", borderRadius: "999px", border: "1px solid #16a34a44" }}>
+            <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+            {liveScores.length} live
+          </div>
+        )}
+      </div>
 
       <div
         ref={containerRef}
