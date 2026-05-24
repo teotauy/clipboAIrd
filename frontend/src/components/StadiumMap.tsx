@@ -106,8 +106,9 @@ export default function StadiumMap({ liveScores, spreads, flashingTeams }: Stadi
   const polylinesRef = useRef<ReturnType<typeof import("leaflet").polyline>[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
   const radarLayerRef = useRef<ReturnType<typeof import("leaflet").tileLayer> | null>(null);
-  const [radarOn, setRadarOn] = useState(false);
+  const [radarOn, setRadarOn] = useState(true);
   const [radarAge, setRadarAge] = useState<string | null>(null);
+  const [mapReady, setMapReady] = useState(false);
 
   // Build a lookup: team → position
   const posMap = Object.fromEntries(spreads.map((s) => [s.team, s.current_position]));
@@ -142,6 +143,7 @@ export default function StadiumMap({ liveScores, spreads, flashingTeams }: Stadi
       ).addTo(map);
 
       mapRef.current = map as never;
+      setMapReady(true);
     });
 
     return () => {
@@ -158,7 +160,7 @@ export default function StadiumMap({ liveScores, spreads, flashingTeams }: Stadi
 
   // ── Radar layer toggle ────────────────────────────────────────────────────
   useEffect(() => {
-    if (!mapRef.current) return;
+    if (!mapRef.current || !mapReady) return;
     import("leaflet").then(async (L) => {
       const map = mapRef.current as ReturnType<typeof L.map>;
       if (radarOn) {
@@ -186,7 +188,7 @@ export default function StadiumMap({ liveScores, spreads, flashingTeams }: Stadi
       }
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [radarOn]);
+  }, [radarOn, mapReady]);
 
   // ── Update markers and threads whenever data changes ──────────────────────
   useEffect(() => {
